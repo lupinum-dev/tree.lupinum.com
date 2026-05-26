@@ -1,12 +1,12 @@
-import type { TreeOptions } from './useTreeGenerator'
+import type { TreeOptions } from '~/features/tree/domain/workspace.types'
 
 export function useTreeStorage() {
-  const isClient = process.client
+  const isClient = import.meta.client
 
   // Save data to localStorage
   const saveToStorage = <T>(key: string, value: T): void => {
     if (!isClient) return
-    
+
     try {
       localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
     } catch (e) {
@@ -17,12 +17,12 @@ export function useTreeStorage() {
   // Load data from localStorage
   const loadFromStorage = <T>(key: string, defaultValue: T): T => {
     if (!isClient) return defaultValue
-    
+
     try {
       const savedValue = localStorage.getItem(key)
       if (savedValue === null) return defaultValue
-      
-      return typeof defaultValue === 'string' 
+
+      return typeof defaultValue === 'string'
         ? savedValue as unknown as T
         : JSON.parse(savedValue) as T
     } catch (e) {

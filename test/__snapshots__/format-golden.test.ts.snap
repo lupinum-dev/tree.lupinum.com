@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden fixtures > basic input matches utf-8 tree snapshot 1`] = `
+".
+└── app
+    ├── src
+    │   └── index.js
+    └── package.json"
+`;

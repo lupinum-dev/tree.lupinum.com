@@ -1,37 +1,18 @@
 import { mockInput } from '~/lib/mock-input'
-import type { FormatType } from '~/lib/tree-formatters'
-
-export interface TreeOptions {
-  format: FormatType
-  fullPath: boolean
-  trailingSlash: boolean
-  rootDot: boolean
-}
+import type { TreeOptions } from '~/features/tree/domain/workspace.types'
 
 export function useTreeGenerator() {
-  // Default options
-  const defaultOptions: TreeOptions = {
-    format: 'utf-8',
-    fullPath: false,
-    trailingSlash: false,
-    rootDot: true
-  }
-
-  // Reset to default example
-  const resetToDefault = () => {
-    return {
-      source: mockInput,
-      options: {
-        format: 'utf-8',
-        fullPath: false,
-        trailingSlash: false,
-        rootDot: true
-      }
-    }
-  }
+  const resetToDefault = () => ({
+    source: mockInput,
+    options: {
+      format: 'utf-8',
+      fullPath: false,
+      trailingSlash: false,
+      rootDot: true
+    } satisfies TreeOptions
+  })
 
   return {
-    defaultOptions,
     resetToDefault
   }
 }

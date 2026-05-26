@@ -5,19 +5,24 @@ defineProps<{
   error: NuxtError
 }>()
 
+const { public: pub } = useRuntimeConfig()
+
 useHead({
   htmlAttrs: {
     lang: 'en'
-  }
+  },
+  meta: [{ name: 'robots', content: 'noindex, follow' }]
 })
 
 useSeoMeta({
-  title: 'Page not found',
-  description: 'We are sorry but this page could not be found.'
+  title: `Page not found · ${pub.siteName}`,
+  description: `${pub.siteName} could not show this address. Open the generator at ${pub.siteUrl}/.`
 })
 
-const { data: navigation } = await useAsyncData('navigation', () => queryCollectionNavigation('docs'))
-const { data: files } = useLazyAsyncData('search', () => queryCollectionSearchSections('docs'), {
+const { data: navigation } = await useAsyncData('navigation', () =>
+  Promise.resolve([] as unknown[])
+)
+const { data: files } = useLazyAsyncData('search', () => Promise.resolve([] as unknown[]), {
   server: false
 })
 

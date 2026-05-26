@@ -1,22 +1,18 @@
 <script setup lang="ts">
+import type { TreeDiagnostic } from '~/features/tree/domain/tree.types'
+
 defineProps<{
   tree: string
+  parseErrors?: TreeDiagnostic[] | null
 }>()
 
 const emit = defineEmits<{
-  (e: 'copy'): void
-  (e: 'export'): void
+  copy: []
+  export: []
 }>()
 
-// Copy tree to clipboard handler
-const copyTree = () => {
-  emit('copy')
-}
-
-// Export tree as image handler
-const exportTree = () => {
-  emit('export')
-}
+const copyTree = () => emit('copy')
+const exportTree = () => emit('export')
 </script>
 
 <template>
@@ -44,9 +40,19 @@ const exportTree = () => {
         </UTooltip>
       </div>
     </div>
+
+    <UAlert
+      v-if="parseErrors?.length && tree === 'Error parsing input'"
+      class="mb-2"
+      icon="i-heroicons-information-circle"
+      color="neutral"
+      variant="soft"
+      title="Parsing failed — see input panel for details"
+    />
+
     <div
       id="tree-output"
-      class="tree flex-1 p-4 rounded bg-gray-100 dark:bg-gray-800 whitespace-pre font-mono overflow-auto border border-gray-200 dark:border-gray-700"
+      class="tree flex-1 p-4 rounded bg-gray-100 dark:bg-gray-800 whitespace-pre font-mono overflow-auto border border-gray-200 dark:border-gray-700 min-h-[12rem]"
     >
       {{ tree }}
     </div>

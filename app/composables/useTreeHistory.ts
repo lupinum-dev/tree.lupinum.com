@@ -1,60 +1,92 @@
-import { ref } from 'vue'
-import { useTreeStorage } from './useTreeStorage'
+import type { Ref } from 'vue'
 
-// Interface for history state
 export interface HistoryState {
   content: string
-  cursorPosition: {
-    start: number
-    end: number
-  }
+  cursorPosition: { start: number, end: number }
 }
 
-export function useTreeHistory() {
-  const { saveToStorage } = useTreeStorage()
-  
-  const MAX_HISTORY_SIZE = 1000
-  const history = ref<HistoryState[]>([])
-  const currentHistoryIndex = ref(-1)
-  const isUndoRedoOperation = ref(false)
+const HISTORY_BLOB_KEY = 'tree-history-blob-v1'
+const MAX_HISTORY_SIZE = 1000
 
-  // Function to save state to history
+interface BlobV1 {
+  version: 1
+  byTabId: Record<string, { stack: HistoryState[], index: number }>
+}
+
+function readBlob(storage: Storage): BlobV1 | null {
+  try {
+    const raw = storage.getItem(HISTORY_BLOB_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as BlobV1
+    if (parsed?.version === 1 && parsed.byTabId && typeof parsed.byTabId === 'object') {
+      return parsed
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+function writeBlob(storage: Storage, byTabId: Record<string, { stack: HistoryState[], index: number }>) {
+  storage.setItem(HISTORY_BLOB_KEY, JSON.stringify({ version: 1, byTabId } satisfies BlobV1))
+}
+
+/** Per-tab undo stacks; one versioned blob in localStorage */
+export function useTreeHistory(activeTabId: Ref<string>) {
+  const isUndoRedoOperation = { value: false }
+  const tabState: Record<string, { stack: HistoryState[], index: number }> = {}
+
+  const storage = (): Storage | null =>
+    import.meta.client ? window.localStorage : null
+
+  const persist = () => {
+    const ls = storage()
+    if (!ls) return
+    writeBlob(ls, tabState)
+  }
+
+  const hydrate = () => {
+    const ls = storage()
+    if (!ls) return
+    const blob = readBlob(ls)
+    if (!blob) return
+    for (const [id, payload] of Object.entries(blob.byTabId)) {
+      tabState[id] = {
+        stack: Array.isArray(payload.stack) ? [...payload.stack] : [],
+        index: typeof payload.index === 'number' ? payload.index : -1
+      }
+    }
+  }
+
+  hydrate()
+
+  const ensureTab = (tabId: string) => {
+    if (!tabState[tabId]) tabState[tabId] = { stack: [], index: -1 }
+    return tabState[tabId]
+  }
+
   const saveToHistory = (content: string, start: number, end: number) => {
+    const tabId = activeTabId.value
+    if (!tabId) return
     if (isUndoRedoOperation.value) {
       isUndoRedoOperation.value = false
       return
     }
 
-    // Remove any future states if we're not at the end
-    if (currentHistoryIndex.value < history.value.length - 1) {
-      history.value = history.value.slice(0, currentHistoryIndex.value + 1)
+    const ts = ensureTab(tabId)
+    if (ts.index < ts.stack.length - 1) ts.stack = ts.stack.slice(0, ts.index + 1)
+
+    ts.stack.push({ content, cursorPosition: { start, end } })
+    if (ts.stack.length > MAX_HISTORY_SIZE) {
+      ts.stack = ts.stack.slice(-MAX_HISTORY_SIZE)
     }
-
-    // Add new state
-    history.value.push({
-      content,
-      cursorPosition: { start, end }
-    })
-
-    // Limit history size
-    if (history.value.length > MAX_HISTORY_SIZE) {
-      history.value = history.value.slice(-MAX_HISTORY_SIZE)
-    }
-
-    currentHistoryIndex.value = history.value.length - 1
-
-    // Save to localStorage
-    saveToStorage('editor-history', history.value)
-    saveToStorage('editor-history-index', currentHistoryIndex.value.toString())
+    ts.index = ts.stack.length - 1
+    persist()
   }
 
-  // Restore state from history
   const restoreState = (state: HistoryState, textareaRef: HTMLTextAreaElement | null) => {
     if (!textareaRef) return null
-
     isUndoRedoOperation.value = true
-    
-    // Need to return the new content value
     return {
       content: state.content,
       applySelection: () => {
@@ -65,66 +97,49 @@ export function useTreeHistory() {
     }
   }
 
-  // Undo function
   const undo = (textareaRef: HTMLTextAreaElement | null) => {
-    if (currentHistoryIndex.value > 0) {
-      currentHistoryIndex.value--
-      const historyState = history.value[currentHistoryIndex.value]
-      if (historyState) {
-        const result = restoreState(historyState, textareaRef)
-        saveToStorage('editor-history-index', currentHistoryIndex.value.toString())
-        return result
-      }
-    }
-    return null
+    const tabId = activeTabId.value
+    if (!tabId) return null
+    const ts = ensureTab(tabId)
+    if (ts.index <= 0) return null
+    ts.index--
+    const hist = ts.stack[ts.index]
+    persist()
+    return hist ? restoreState(hist, textareaRef) : null
   }
 
-  // Redo function
   const redo = (textareaRef: HTMLTextAreaElement | null) => {
-    if (currentHistoryIndex.value < history.value.length - 1) {
-      currentHistoryIndex.value++
-      const historyState = history.value[currentHistoryIndex.value]
-      if (historyState) {
-        const result = restoreState(historyState, textareaRef)
-        saveToStorage('editor-history-index', currentHistoryIndex.value.toString())
-        return result
-      }
-    }
-    return null
+    const tabId = activeTabId.value
+    if (!tabId) return null
+    const ts = ensureTab(tabId)
+    if (ts.index >= ts.stack.length - 1) return null
+    ts.index++
+    const hist = ts.stack[ts.index]
+    persist()
+    return hist ? restoreState(hist, textareaRef) : null
   }
 
-  // Initialize history
-  const initHistory = (initialContent: string) => {
-    if (history.value.length === 0) {
-      saveToHistory(initialContent, 0, 0)
-    }
+  /** First entry for a tab with no persisted history */
+  const bootstrapTabHistory = (content: string, start = 0, end = 0) => {
+    const tabId = activeTabId.value
+    if (!tabId) return
+    const ts = ensureTab(tabId)
+    if (ts.stack.length > 0) return
+    ts.stack.push({ content, cursorPosition: { start, end } })
+    ts.index = 0
+    persist()
   }
 
-  // Load history from storage
-  const loadHistory = () => {
-    try {
-      const savedHistory = localStorage.getItem('editor-history')
-      const savedIndex = localStorage.getItem('editor-history-index')
-      
-      if (savedHistory) {
-        history.value = JSON.parse(savedHistory)
-        currentHistoryIndex.value = savedIndex ? parseInt(savedIndex) : history.value.length - 1
-        return history.value[currentHistoryIndex.value] || null
-      }
-    } catch (e) {
-      console.error('Failed to load history from localStorage:', e)
-    }
-    return null
+  const resetHistoryForTab = (tabId: string) => {
+    Reflect.deleteProperty(tabState, tabId)
+    persist()
   }
 
   return {
-    history,
-    currentHistoryIndex,
     saveToHistory,
-    restoreState,
     undo,
     redo,
-    initHistory,
-    loadHistory
+    bootstrapTabHistory,
+    resetHistoryForTab
   }
 }

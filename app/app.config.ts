@@ -1,3 +1,5 @@
+import { SITE_DESCRIPTION, SITE_NAME } from '../site-meta'
+
 export default defineAppConfig({
   ui: {
     colors: {
@@ -14,11 +16,11 @@ export default defineAppConfig({
     }
   },
   seo: {
-    siteName: 'ASCII Tree Generator',
-    description: 'A modern open-source ASCII folder structure generator that works entirely in your browser. Your files and text never leave your device - zero server processing.'
+    siteName: SITE_NAME,
+    description: SITE_DESCRIPTION
   },
   header: {
-    title: 'ASCII Tree Generator',
+    title: SITE_NAME,
     to: '/',
     logo: {
       alt: 'ASCII Tree Generator Logo',
@@ -29,7 +31,7 @@ export default defineAppConfig({
     colorMode: true,
     links: [{
       'icon': 'i-simple-icons-github',
-      'to': 'https://github.com/nuxt-ui-pro/docs/tree/v3',
+      'to': 'https://github.com/lupinum/tree.lupinum.com',
       'target': '_blank',
       'aria-label': 'GitHub'
     }]
@@ -42,5 +44,5 @@ export default defineAppConfig({
       'target': '_blank',
       'aria-label': 'ASCII Tree Generator on GitHub'
     }]
-  },
+  }
 })

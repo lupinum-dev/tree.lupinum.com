@@ -2,16 +2,16 @@
 import { ref } from 'vue'
 import type { TreeTab } from '~/composables/useTreeTabs'
 
-const props = defineProps<{
+defineProps<{
   tabs: TreeTab[]
   activeTabId: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:activeTabId', id: string): void
-  (e: 'add'): void
-  (e: 'rename', id: string, name: string): void
-  (e: 'delete', id: string): void
+  'update:activeTabId': [id: string]
+  'add': []
+  'rename': [id: string, name: string]
+  'delete': [id: string]
 }>()
 
 // State for rename modal
@@ -85,16 +85,16 @@ const cancelDelete = () => {
   <div class="tree-tabs-container mb-4">
     <div class="flex items-center space-x-1 border-b border-gray-200 dark:border-gray-700">
       <!-- Tab list -->
-      <div 
-        v-for="tab in tabs" 
+      <div
+        v-for="tab in tabs"
         :key="tab.id"
         class="tab-item relative"
-        :class="{'active-tab': tab.id === activeTabId}"
+        :class="{ 'active-tab': tab.id === activeTabId }"
         @click="onTabClick(tab.id)"
       >
         <div class="flex items-center py-2 px-4 cursor-pointer bg-gray-100 dark:bg-gray-800 rounded-t-md">
           <span>{{ tab.name }}</span>
-          
+
           <div class="ml-2 flex items-center space-x-1">
             <UButton
               size="xs"
@@ -102,10 +102,10 @@ const cancelDelete = () => {
               variant="ghost"
               icon="i-heroicons-pencil-square"
               class="opacity-50 hover:opacity-100"
-              @click="openRenameModal(tab, $event)"
               title="Rename tab"
+              @click="openRenameModal(tab, $event)"
             />
-            
+
             <UButton
               v-if="tabs.length > 1"
               size="xs"
@@ -113,44 +113,47 @@ const cancelDelete = () => {
               variant="ghost"
               icon="i-heroicons-trash"
               class="opacity-50 hover:opacity-100"
-              @click="openDeleteModal(tab, $event)"
               title="Delete tab"
+              @click="openDeleteModal(tab, $event)"
             />
           </div>
         </div>
-        <div 
-          v-if="tab.id === activeTabId" 
+        <div
+          v-if="tab.id === activeTabId"
           class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500"
-        ></div>
+        />
       </div>
-      
+
       <!-- Add tab button -->
       <UButton
         size="sm"
         variant="ghost"
         color="neutral"
         icon="i-heroicons-plus"
-        @click="onAddTab"
         title="Add new tree"
+        @click="onAddTab"
       />
     </div>
 
     <!-- Rename Modal -->
-    <UModal v-model:open="isRenameModalOpen" title="Rename Tab">
+    <UModal
+      v-model:open="isRenameModalOpen"
+      title="Rename Tab"
+    >
       <!-- This is an empty hidden button that acts as the trigger -->
-      <div class="hidden"></div>
-      
+      <div class="hidden" />
+
       <template #body>
         <UFormGroup label="New name">
           <UInput
             v-model="newTabName"
             placeholder="Enter tab name"
-            @keyup.enter="submitRename"
             autofocus
+            @keyup.enter="submitRename"
           />
         </UFormGroup>
       </template>
-      
+
       <template #footer>
         <div class="flex justify-end space-x-2">
           <UButton
@@ -160,7 +163,7 @@ const cancelDelete = () => {
           >
             Cancel
           </UButton>
-          
+
           <UButton
             color="primary"
             :disabled="!newTabName.trim()"
@@ -173,17 +176,20 @@ const cancelDelete = () => {
     </UModal>
 
     <!-- Delete Modal -->
-    <UModal v-model:open="isDeleteModalOpen" title="Delete Tab">
+    <UModal
+      v-model:open="isDeleteModalOpen"
+      title="Delete Tab"
+    >
       <!-- This is an empty hidden button that acts as the trigger -->
-      <div class="hidden"></div>
-      
+      <div class="hidden" />
+
       <template #body>
         <p>
           Are you sure you want to delete "{{ tabToDelete?.name }}"?
           This action cannot be undone.
         </p>
       </template>
-      
+
       <template #footer>
         <div class="flex justify-end space-x-2">
           <UButton
@@ -193,7 +199,7 @@ const cancelDelete = () => {
           >
             Cancel
           </UButton>
-          
+
           <UButton
             color="error"
             @click="confirmDelete"

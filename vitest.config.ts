@@ -1,34 +1,29 @@
-import { defineConfig } from 'vitest/config';
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vitest/config'
+
+const root = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '~': path.join(root, 'app'),
+      '@': path.join(root, 'app')
+    }
+  },
   test: {
-    // Use fork pool instead of threads to avoid Node.js v22 errors
     pool: 'forks',
-    
-    // Test environment
     environment: 'node',
-    
-    // Include test patterns
     include: ['**/*.test.{ts,js}'],
-    
-    // Exclude patterns
     exclude: ['**/node_modules/**', '**/dist/**'],
-    
-    // Coverage settings
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['**/node_modules/**', '**/dist/**', '**/*.test.{ts,js}'],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/*.test.{ts,js}']
     },
-    
-    // Set longer timeouts for large tests
     testTimeout: 15000,
     hookTimeout: 10000,
-    
-    // Make tests resilient to errors
     dangerouslyIgnoreUnhandledErrors: true,
-    
-    // Reporters
-    reporters: ['default', 'html'],
-  },
-});
+    reporters: ['default']
+  }
+})

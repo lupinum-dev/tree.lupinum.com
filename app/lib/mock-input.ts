@@ -5,5 +5,5 @@
 export const mockInput = [
   'my-app',
   '  src',
-  '    index.html',
-].join('\n');
+  '    index.html'
+].join('\n')

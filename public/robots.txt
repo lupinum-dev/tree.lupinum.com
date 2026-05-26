@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ascii-file-tree.com/sitemap.xml 
+Sitemap: https://tree.lupinum.com/sitemap.xml 

@@ -1,0 +1,2 @@
+patchedDependencies:
+  '@nuxt/ui@3.0.0-beta.2': patches/@nuxt__ui@3.0.0-beta.2.patch
