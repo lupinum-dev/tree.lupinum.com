@@ -15,13 +15,17 @@ export default defineNuxtConfig({
     '@nuxt/test-utils/module'
   ],
 
-  ssr: false,
+  /**
+   * Hybrid delivery: SSR / prerender the page shell (`index.vue`); the tree UI lives under
+   * `<ClientOnly>` to avoid SSR on localStorage-heavy composables while keeping real HTML + SEO body.
+   */
+  ssr: true,
 
   devtools: {
     enabled: true
   },
 
-  /** Crawler-visible & first-paint `<head>` (critical for SPA-only mode). */
+  /** Crawler-visible & first-paint `<head>`. */
   app: {
     head: {
       title: SITE_TITLE,
@@ -82,11 +86,21 @@ export default defineNuxtConfig({
     }
   },
 
+  routeRules: {
+    '/': { prerender: true }
+  },
+
   future: {
     compatibilityVersion: 4
   },
 
   compatibilityDate: '2024-07-11',
+
+  nitro: {
+    prerender: {
+      routes: ['/']
+    }
+  },
 
   typescript: {
     tsConfig: {
