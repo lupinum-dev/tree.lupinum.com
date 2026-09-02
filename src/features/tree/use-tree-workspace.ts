@@ -1,14 +1,20 @@
 import { computed, inject, provide, ref, shallowRef, watch, type InjectionKey } from 'vue'
 import { toast } from 'vue-sonner'
+import { splitInputLines } from './domain/parse-tree-input'
 import { buildParsedTreeOutput } from './domain/tree-output'
-import { RENDERERS_BY_ID } from './domain/tree-format-registry'
-import type { FormatType } from './domain/tree-formatters-impl'
+import { findTreeRenderer, isFormatType, type FormatType } from './domain/tree-formatters'
 import type { TreeDiagnostic } from './domain/tree.types'
-import type { SavedTree, TreeOptions } from './domain/workspace.types'
+import {
+  DEFAULT_TREE_OPTIONS,
+  type SavedTree,
+  type SharedTree,
+  type TreeOptions,
+} from './domain/workspace.types'
 import { filesToTreeSourceText } from './infrastructure/folder-tree-builder'
 import { pickFolderFiles } from './infrastructure/folder-picker'
 import { exportTreeTextAsImageFromElement } from './infrastructure/image-export'
 import { loadPersistedWorkspace, persistWorkspace } from './infrastructure/persisted-workspace'
+import { createShareUrl, decodeShareFragment } from './infrastructure/share-url'
 import { writeTextToClipboard } from './infrastructure/write-clipboard'
 import { mockInput } from './mock-input'
 
@@ -19,12 +25,7 @@ const PERSIST_DEBOUNCE_MS = 250
 export type SaveStatus = 'saved' | 'saving' | 'error'
 
 function defaultOptions(): TreeOptions {
-  return {
-    format: 'utf-8',
-    fullPath: false,
-    trailingSlash: false,
-    rootDot: true,
-  }
+  return { ...DEFAULT_TREE_OPTIONS }
 }
 
 function createId(): string {
@@ -33,25 +34,31 @@ function createId(): string {
     : `tree-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function createSavedTree(name: string, source = ''): SavedTree {
+function createSavedTree(
+  name: string,
+  source = '',
+  options: TreeOptions = defaultOptions(),
+): SavedTree {
   return {
     id: createId(),
     name,
     source,
-    options: defaultOptions(),
+    options: { ...options },
   }
 }
 
-function normalizeTree(tree: SavedTree): SavedTree {
-  const format = tree.options.format in RENDERERS_BY_ID ? tree.options.format : 'utf-8'
-  return {
-    ...tree,
-    options: {
-      ...defaultOptions(),
-      ...tree.options,
-      format: format as FormatType,
-    },
-  }
+function sharedTreeName(sharedTree: SharedTree): string {
+  return splitInputLines(sharedTree.source)[0]?.name || 'Shared tree'
+}
+
+function matchesSharedTree(tree: SavedTree, sharedTree: SharedTree): boolean {
+  return (
+    tree.source === sharedTree.source &&
+    tree.options.format === sharedTree.options.format &&
+    tree.options.fullPath === sharedTree.options.fullPath &&
+    tree.options.trailingSlash === sharedTree.options.trailingSlash &&
+    tree.options.rootDot === sharedTree.options.rootDot
+  )
 }
 
 export function createTreeWorkspace() {
@@ -69,7 +76,7 @@ export function createTreeWorkspace() {
 
   const activeFormatLabel = computed(() => {
     const format = activeTree.value?.options.format ?? 'utf-8'
-    return RENDERERS_BY_ID[format]?.label ?? 'UTF-8 Tree'
+    return findTreeRenderer(format).label
   })
 
   let outputTimer: ReturnType<typeof setTimeout> | undefined
@@ -99,8 +106,8 @@ export function createTreeWorkspace() {
     parseErrors.value = []
   }
 
-  function persistNow() {
-    if (!isReady.value || typeof window === 'undefined' || trees.value.length === 0) return
+  function persistNow(): boolean {
+    if (!isReady.value || typeof window === 'undefined' || trees.value.length === 0) return false
     clearTimeout(persistTimer)
     try {
       persistWorkspace(window.localStorage, {
@@ -108,12 +115,14 @@ export function createTreeWorkspace() {
         activeTabId: activeTreeId.value,
       })
       saveStatus.value = 'saved'
+      return true
     } catch {
       saveStatus.value = 'error'
       toast.error('Changes could not be saved in this browser', {
         description: 'Check whether browser storage is available, then try again.',
         duration: Infinity,
       })
+      return false
     }
   }
 
@@ -142,11 +151,11 @@ export function createTreeWorkspace() {
     { deep: true, immediate: true },
   )
 
-  function initClient() {
+  async function initClient() {
     if (isReady.value || typeof window === 'undefined') return
     const persisted = loadPersistedWorkspace(window.localStorage)
     if (persisted?.tabs.length) {
-      trees.value = persisted.tabs.map(normalizeTree)
+      trees.value = persisted.tabs
       activeTreeId.value = trees.value.some((tree) => tree.id === persisted.activeTabId)
         ? persisted.activeTabId
         : trees.value[0]!.id
@@ -161,6 +170,36 @@ export function createTreeWorkspace() {
     window.localStorage.removeItem('tree-history-blob-v1')
     window.addEventListener('visibilitychange', persistWhenHidden)
     isReady.value = true
+
+    if (window.location.hash.startsWith('#t=')) {
+      const sharedTree = await decodeShareFragment(window.location.hash)
+      if (sharedTree.ok) {
+        const existing = trees.value.find((tree) => matchesSharedTree(tree, sharedTree.value))
+        const imported =
+          existing ??
+          createSavedTree(
+            sharedTreeName(sharedTree.value),
+            sharedTree.value.source,
+            sharedTree.value.options,
+          )
+        if (!existing) trees.value.push(imported)
+        activeTreeId.value = imported.id
+        if (persistNow()) {
+          window.history.replaceState(
+            window.history.state,
+            '',
+            `${window.location.pathname}${window.location.search}`,
+          )
+          toast.success(existing ? 'Shared tree already open' : 'Shared tree added')
+        }
+      } else {
+        toast.error('Unable to open shared tree', {
+          description: sharedTree.message,
+          duration: Infinity,
+        })
+      }
+    }
+
     rebuildOutput()
   }
 
@@ -188,6 +227,17 @@ export function createTreeWorkspace() {
     activeTreeId.value = tree.id
     schedulePersist()
     return tree
+  }
+
+  function duplicateTree(id: string) {
+    const original = trees.value.find((tree) => tree.id === id)
+    if (!original) return
+    const duplicate = createSavedTree(`${original.name} copy`, original.source, original.options)
+    trees.value.push(duplicate)
+    activeTreeId.value = duplicate.id
+    schedulePersist()
+    toast.success('Tree duplicated')
+    return duplicate
   }
 
   function renameTree(id: string, name: string) {
@@ -227,7 +277,7 @@ export function createTreeWorkspace() {
   }
 
   function updateFormat(format: FormatType) {
-    if (!activeTree.value || !(format in RENDERERS_BY_ID)) return
+    if (!activeTree.value || !isFormatType(format)) return
     activeTree.value.options.format = format
     schedulePersist()
   }
@@ -275,6 +325,33 @@ export function createTreeWorkspace() {
     })
   }
 
+  async function copyShareLink() {
+    const tree = activeTree.value
+    if (!tree || !output.value || typeof window === 'undefined') return
+
+    const shareUrl = await createShareUrl(
+      { source: tree.source, options: tree.options },
+      window.location.href,
+    )
+    if (!shareUrl.ok) {
+      toast.error('Unable to create share link', {
+        description: shareUrl.message,
+        duration: Infinity,
+      })
+      return
+    }
+
+    const copied = await writeTextToClipboard(shareUrl.value)
+    if (copied) {
+      toast.success('Share link copied')
+      return
+    }
+    toast.error('Unable to copy share link', {
+      description: 'Allow clipboard access, then try again.',
+      duration: Infinity,
+    })
+  }
+
   async function exportOutput() {
     if (!output.value) return
     const exported = await exportTreeTextAsImageFromElement({
@@ -306,6 +383,7 @@ export function createTreeWorkspace() {
     dispose,
     selectTree,
     addTree,
+    duplicateTree,
     renameTree,
     deleteTree,
     resetTree,
@@ -314,6 +392,7 @@ export function createTreeWorkspace() {
     updateOption,
     importFolder,
     copyOutput,
+    copyShareLink,
     exportOutput,
     persistNow,
   }

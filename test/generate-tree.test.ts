@@ -1,188 +1,62 @@
-import { describe, it, expect } from 'vite-plus/test'
+import { describe, expect, it } from 'vite-plus/test'
 import { generateTree } from '../src/features/tree/domain/generate-tree'
-import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
-import type { TreeNode } from '../src/features/tree/domain/tree.types'
+import { parseInputOrThrow } from '../src/features/tree/domain/parse-tree-input'
+import type { DirectoryNode, TreeRenderOptions } from '../src/features/tree/domain/tree.types'
+import { createTreeNodeFixture, defaultRenderOptions } from './test-helpers'
 
-// Helper function to create a simple test structure
-function createTestStructure(): TreeNode {
-  // Create a simple structure:
-  // .
-  // └── app
-  //     ├── src
-  //     │   └── index.js
-  //     └── package.json
-  return parseInput('app\n  src\n    index.js\n  package.json')
+const structure = createTreeNodeFixture()
+
+function render(options: Partial<TreeRenderOptions> = {}, charset: 'ascii' | 'utf-8' = 'utf-8') {
+  return generateTree(structure, charset, { ...defaultRenderOptions, ...options })
 }
 
 describe('generateTree', () => {
-  it('should throw an error if structure is missing', () => {
-    // @ts-expect-error Testing invalid input
-    expect(() => generateTree(null)).toThrow('Structure is required')
-    // @ts-expect-error Testing invalid input
-    expect(() => generateTree(undefined)).toThrow('Structure is required')
-  })
-
-  it('should generate a tree with utf-8 charset by default', () => {
-    const structure = createTestStructure()
-    const result = generateTree(structure)
-
-    // Check that the result contains UTF-8 specific characters
-    expect(result).toContain('├──')
-    expect(result).toContain('└──')
-    expect(result).toContain('│')
-
-    // Check that the whole tree structure is formatted correctly
-    expect(result).toBe(
+  it('generates the complete UTF-8 tree', () => {
+    expect(render()).toBe(
       ['.', '└── app', '    ├── src', '    │   └── index.js', '    └── package.json'].join('\n'),
     )
   })
 
-  it('should generate a tree with ascii charset when specified', () => {
-    const structure = createTestStructure()
-    const result = generateTree(structure, { charset: 'ascii' })
-
-    // Check that the result contains ASCII specific characters
-    expect(result).toContain('|--')
-    expect(result).toContain('`--')
-    expect(result).toContain('|')
-
-    // Check that the whole tree structure is formatted correctly
-    expect(result).toBe(
+  it('generates the complete ASCII tree', () => {
+    expect(render({}, 'ascii')).toBe(
       ['.', '`-- app', '    |-- src', '    |   `-- index.js', '    `-- package.json'].join('\n'),
     )
   })
 
-  it('should generate a tree without root dot when specified', () => {
-    const structure = createTestStructure()
-    const result = generateTree(structure, { rootDot: false })
-
-    // Check that the result doesn't start with a dot
-    expect(result).not.toMatch(/^\./)
-
-    // Check that the tree still shows the rest of the structure
-    expect(result).toBe(['app', '├── src', '│   └── index.js', '└── package.json'].join('\n'))
-  })
-
-  it('should append trailing slashes to directories when specified', () => {
-    const structure = createTestStructure()
-    const result = generateTree(structure, { trailingDirSlash: true })
-
-    // Check that directories have trailing slashes
-    expect(result).toContain('app/')
-    expect(result).toContain('src/')
-
-    // But files don't
-    expect(result).not.toContain('index.js/')
-    expect(result).not.toContain('package.json/')
-
-    // Check complete output
-    expect(result).toBe(
-      ['.', '└── app/', '    ├── src/', '    │   └── index.js', '    └── package.json'].join('\n'),
+  it('supports root, path, and directory suffix options together', () => {
+    expect(render({ rootDot: false, fullPath: true, trailingSlash: true })).toBe(
+      ['app/', '├── app/src/', '│   └── app/src/index.js', '└── app/package.json'].join('\n'),
     )
   })
 
-  it('should print full paths when specified', () => {
-    const structure = createTestStructure()
-    const result = generateTree(structure, { fullPath: true })
-
-    // Check that full paths are included
-    expect(result).toContain('app/src/index.js')
-    expect(result).toContain('app/package.json')
-
-    // Check complete output
-    expect(result).toBe(
-      [
-        '.',
-        '└── app',
-        '    ├── app/src',
-        '    │   └── app/src/index.js',
-        '    └── app/package.json',
-      ].join('\n'),
-    )
-  })
-
-  it('should throw an error for unknown charset', () => {
-    const structure = createTestStructure()
-    // @ts-expect-error Testing invalid charset
-    expect(() => generateTree(structure, { charset: 'invalid' })).toThrow(
-      'Unknown charset: invalid',
-    )
-  })
-
-  it('should handle a complex nested tree', () => {
-    const input = [
-      'project',
-      '  src',
-      '    components',
-      '      Button.tsx',
-      '      Card.tsx',
-      '      index.ts',
-      '    utils',
-      '      format.ts',
-      '      validation.ts',
-      '    App.tsx',
-      '    index.tsx',
-      '  tests',
-      '    components',
-      '      Button.test.tsx',
-      '    utils',
-      '      format.test.ts',
-      '    App.test.tsx',
-      '  public',
-      '    index.html',
-      '    favicon.ico',
-      '  package.json',
-      '  README.md',
-    ].join('\n')
-
-    const structure = parseInput(input)
-    const result = generateTree(structure)
-
-    // Test specific parts of the output
-    expect(result).toContain('project')
-    expect(result).toContain('src')
-    expect(result).toContain('components')
-    expect(result).toContain('Button.tsx')
-
-    // Verify proper nesting with indentation
-    const lines = result.split('\n')
-    const projectLine = lines.findIndex((line) => line.endsWith('project'))
-    expect(projectLine).toBeGreaterThanOrEqual(0)
-    expect(lines[projectLine + 1]?.includes('├──')).toBe(true)
-    expect(lines[projectLine + 1]?.includes('src')).toBe(true)
-
-    const readmeLine = lines.findIndex((line) => line.endsWith('README.md'))
-    expect(readmeLine).toBeGreaterThanOrEqual(0)
-    expect(lines[readmeLine]?.includes('└──')).toBe(true)
-  })
-
-  it('should handle empty children', () => {
-    const structure: TreeNode = {
-      id: 'empty-root',
-      name: '.',
-      kind: 'directory',
-      children: [],
+  it('covers every boolean option combination', () => {
+    for (let flags = 0; flags < 8; flags++) {
+      const output = render({
+        fullPath: (flags & 1) !== 0,
+        trailingSlash: (flags & 2) !== 0,
+        rootDot: (flags & 4) === 0,
+      })
+      expect(output).toContain('index.js')
+      expect(output.startsWith('.') === ((flags & 4) === 0)).toBe(true)
+      expect(output.includes('app/src/index.js')).toBe((flags & 1) !== 0)
+      expect(output.includes('app/')).toBe((flags & 2) !== 0 || (flags & 1) !== 0)
     }
-
-    const result = generateTree(structure)
-    expect(result).toBe('.')
   })
 
-  it('should handle options combination', () => {
-    const structure = createTestStructure()
-    const result = generateTree(structure, {
-      charset: 'ascii',
-      rootDot: false,
-      trailingDirSlash: true,
-    })
+  it('supports multiple top-level nodes without a virtual root line', () => {
+    const tree = parseInputOrThrow('one\ntwo')
+    expect(generateTree(tree, 'utf-8', { ...defaultRenderOptions, rootDot: false })).toBe(
+      'one\ntwo',
+    )
+  })
 
-    // Check combined features are working
-    expect(result).toContain('app/')
-    expect(result).toContain('src/')
-    expect(result).toContain('|--')
-    expect(result).not.toMatch(/^\./)
+  it('handles an empty virtual root', () => {
+    const empty: DirectoryNode = { name: '.', kind: 'directory', children: [] }
+    expect(generateTree(empty)).toBe('.')
+  })
 
-    // Check complete output
-    expect(result).toBe(['app/', '|-- src/', '|   `-- index.js', '`-- package.json'].join('\n'))
+  it('rejects a missing structure at the runtime boundary', () => {
+    // @ts-expect-error Testing an invalid runtime caller.
+    expect(() => generateTree(null)).toThrow('Structure is required')
   })
 })

@@ -1,19 +1,9 @@
 // Adapted from https://gitlab.com/nfriend/tree-online/ (Apache License 2.0)
-import type { ParseResult, TreeNode, TreeNodeKind } from './tree.types'
+import type { DirectoryNode, ParseResult, TreeNode } from './tree.types'
 
-/**
- * Matches the whitespace in front of a file name.
- * Also matches an optional markdown bullet point.
- */
-const leadingWhitespaceAndBulletRegex = /^((\s*)(?:-\s)?)/
+export const MAX_TREE_DEPTH = 256
 
 const onlyWhitespaceRegex = /^\s*$/
-
-let parseIdSeq = 0
-function nextId(): string {
-  parseIdSeq += 1
-  return `node-${parseIdSeq}`
-}
 
 export interface RawLine {
   name: string
@@ -21,187 +11,199 @@ export interface RawLine {
   explicitDirectory: boolean
   /** 1-based source line number */
   sourceLineNumber: number
+  /** 1-based column where the node name starts */
+  nameColumn: number
   rawLine: string
 }
 
-type StackNode = TreeNode & {
-  _indent: number
-  _explicitDir: boolean
+interface DraftNode {
+  name: string
+  explicitDirectory: boolean
+  children: DraftNode[]
 }
 
-/**
- * Split user text into line records (exported for tests).
- */
+interface IndentFrame {
+  indent: number
+  node: DraftNode
+}
+
+function indentationWidth(prefix: string): number {
+  let width = 0
+  for (const character of prefix) {
+    width = character === '\t' ? width + (2 - (width % 2)) : width + 1
+  }
+  return width
+}
+
+/** Split user text into normalized line records. */
 export function splitInputLines(input: string): RawLine[] {
-  const textLines = input.split(/\r?\n/)
+  const output: RawLine[] = []
 
-  const out: RawLine[] = []
-
-  textLines.forEach((lineContent, idx) => {
+  input.split(/\r?\n/).forEach((lineContent, index) => {
     if (onlyWhitespaceRegex.test(lineContent)) return
 
-    const matchResult = leadingWhitespaceAndBulletRegex.exec(lineContent)
-
-    if (!matchResult) {
-      return
+    const leadingWhitespace = /^[ \t]*/.exec(lineContent)?.[0] ?? ''
+    let content = lineContent.slice(leadingWhitespace.length)
+    let bulletWidth = 0
+    if (/^-\s/.test(content)) {
+      bulletWidth = 2
+      content = content.slice(2)
     }
 
-    const prefix = matchResult[1] ?? ''
-    const indentPart = matchResult[2] ?? ''
-    const rest = lineContent.replace(prefix, '')
-    const trimmed = rest.trimEnd()
+    const trimmed = content.trimEnd()
     const explicitDirectory = trimmed.endsWith('/')
-    const nameRaw = explicitDirectory ? trimmed.slice(0, -1) : trimmed
-    const indentCount = indentPart.length
 
-    out.push({
-      name: nameRaw,
-      indentCount,
+    output.push({
+      name: explicitDirectory ? trimmed.slice(0, -1) : trimmed,
+      indentCount: indentationWidth(leadingWhitespace),
       explicitDirectory,
-      sourceLineNumber: idx + 1,
+      sourceLineNumber: index + 1,
+      nameColumn: indentationWidth(leadingWhitespace) + bulletWidth + 1,
       rawLine: lineContent.trimEnd(),
     })
   })
 
-  return out
+  return output
 }
 
-/** @deprecated Prefer splitInputLines */
-export function splitInput(input: string): RawLine[] {
-  return splitInputLines(input)
-}
-
-/**
- * Parses plain-text tree input into a rooted {@link TreeNode}.
- */
+/** Parse plain indentation into a typed virtual-root tree. */
 export function parseTreeInput(input: string): ParseResult {
-  parseIdSeq = 0
-  if (input === null || typeof input !== 'string') {
+  if (typeof input !== 'string' || !input.trim()) {
     return {
       ok: false,
-      errors: [{ line: 1, message: 'Input must be a non-empty string' }],
+      errors: [
+        {
+          line: 1,
+          column: 1,
+          message: 'Input must be a non-empty string',
+          lineContent: typeof input === 'string' ? input : undefined,
+        },
+      ],
     }
   }
 
-  if (!input.trim()) {
-    return {
-      ok: false,
-      errors: [{ line: 1, message: 'Input must be a non-empty string', lineContent: input }],
-    }
-  }
+  const lines = splitInputLines(input)
+  const rootDraft: DraftNode = { name: '.', explicitDirectory: true, children: [] }
+  const frames: IndentFrame[] = []
+  const baseline = lines[0]!.indentCount
 
-  const rawLines = splitInputLines(input)
-  if (rawLines.length === 0) {
-    return {
-      ok: false,
-      errors: [{ line: 1, message: 'Input must contain at least one non-blank line' }],
-    }
-  }
-
-  const root = {
-    id: nextId(),
-    name: '.',
-    kind: 'directory',
-    children: [],
-    _indent: -1,
-    _explicitDir: false,
-  } satisfies StackNode
-
-  const stack: StackNode[] = [root]
-
-  for (const line of rawLines) {
-    const lineNo = line.sourceLineNumber
-    const peek = stack[stack.length - 1]!
-
-    let lastIndent = peek._indent
-    if (peek.name === '.') lastIndent = -1
-
-    if (line.indentCount > lastIndent + 2 && lastIndent !== -1) {
+  for (const line of lines) {
+    if (!line.name) {
       return {
         ok: false,
         errors: [
           {
-            line: lineNo,
-            message: `Bad indentation before "${line.name || '(empty)'}" (indent jumped more than 2 spaces)`,
+            line: line.sourceLineNumber,
+            column: line.nameColumn,
+            message: 'Every tree entry needs a name',
             lineContent: line.rawLine,
           },
         ],
       }
     }
 
-    while (stack.length > 1) {
-      const top = stack[stack.length - 1]!
-      const topIndent = top.name === '.' ? -1 : top._indent
-      if (topIndent >= line.indentCount) {
-        stack.pop()
-      } else {
-        break
-      }
-    }
+    let parent = rootDraft
+    const current = frames.at(-1)
 
-    const parent = stack[stack.length - 1]
-    if (!parent || stack.length === 0) {
+    if (current && line.indentCount > current.indent) {
+      parent = current.node
+    } else if (current) {
+      let matchingLevel = -1
+      for (let index = frames.length - 1; index >= 0; index--) {
+        if (frames[index]!.indent === line.indentCount) {
+          matchingLevel = index
+          break
+        }
+      }
+      if (matchingLevel === -1) {
+        return {
+          ok: false,
+          errors: [
+            {
+              line: line.sourceLineNumber,
+              column: line.nameColumn,
+              message: `Indentation must return to an earlier level before "${line.name}"`,
+              lineContent: line.rawLine,
+            },
+          ],
+        }
+      }
+      frames.length = matchingLevel
+      parent = frames.at(-1)?.node ?? rootDraft
+    } else if (line.indentCount !== baseline) {
       return {
         ok: false,
         errors: [
           {
-            line: lineNo,
-            message: `Bad indentation found at "${line.name}"`,
+            line: line.sourceLineNumber,
+            column: line.nameColumn,
+            message: `Indentation before "${line.name}" is outside the tree's base level`,
             lineContent: line.rawLine,
           },
         ],
       }
     }
 
-    const provisionalKind: TreeNodeKind = line.explicitDirectory ? 'directory' : 'file'
+    const depth = frames.length + 1
+    if (depth > MAX_TREE_DEPTH) {
+      return {
+        ok: false,
+        errors: [
+          {
+            line: line.sourceLineNumber,
+            column: line.nameColumn,
+            message: `Trees can be at most ${MAX_TREE_DEPTH} levels deep`,
+            lineContent: line.rawLine,
+          },
+        ],
+      }
+    }
 
-    const node: StackNode = {
-      id: nextId(),
+    const node: DraftNode = {
       name: line.name,
-      kind: provisionalKind,
+      explicitDirectory: line.explicitDirectory,
       children: [],
-      _indent: line.indentCount,
-      _explicitDir: line.explicitDirectory,
     }
-
     parent.children.push(node)
-    stack.push(node)
+    frames.push({ indent: line.indentCount, node })
   }
 
-  finalizeKinds(root)
-  stripInternal(root)
-
-  return { ok: true, root }
+  return { ok: true, root: finalizeTree(rootDraft) }
 }
 
-function finalizeKinds(node: TreeNode): void {
-  for (const child of node.children) {
-    const s = child as StackNode
-    if (child.children.length > 0) {
-      child.kind = 'directory'
-    } else if (s._explicitDir) {
-      child.kind = 'directory'
-    } else {
-      child.kind = 'file'
+function finalizeTree(root: DraftNode): DirectoryNode {
+  const finalized = new Map<DraftNode, TreeNode>()
+  const stack: Array<{ node: DraftNode; visited: boolean }> = [{ node: root, visited: false }]
+
+  while (stack.length > 0) {
+    const frame = stack.pop()!
+    if (!frame.visited) {
+      stack.push({ node: frame.node, visited: true })
+      for (let index = frame.node.children.length - 1; index >= 0; index--) {
+        stack.push({ node: frame.node.children[index]!, visited: false })
+      }
+      continue
     }
-    finalizeKinds(child)
+
+    const children = frame.node.children.map((child) => finalized.get(child)!)
+    finalized.set(
+      frame.node,
+      children.length > 0 || frame.node.explicitDirectory
+        ? { name: frame.node.name, kind: 'directory', children }
+        : { name: frame.node.name, kind: 'file' },
+    )
   }
+
+  const finalizedRoot = finalized.get(root)
+  if (!finalizedRoot || finalizedRoot.kind !== 'directory') {
+    throw new Error('Virtual tree root must be a directory')
+  }
+  return finalizedRoot
 }
 
-function stripInternal(node: TreeNode): void {
-  delete (node as Partial<StackNode>)._indent
-  delete (node as Partial<StackNode>)._explicitDir
-  for (const child of node.children) stripInternal(child)
-}
-
-/**
- * Parses input or throws with the first error message (compat for callers/tests).
- */
-export function parseInputOrThrow(input: string): TreeNode {
-  const r = parseTreeInput(input)
-  if (!r.ok) {
-    const first = r.errors[0]
-    throw new Error(first?.message ?? 'Parse failed')
-  }
-  return r.root
+/** Parse input or throw with the first diagnostic message. */
+export function parseInputOrThrow(input: string): DirectoryNode {
+  const result = parseTreeInput(input)
+  if (!result.ok) throw new Error(result.errors[0]?.message ?? 'Parse failed')
+  return result.root
 }

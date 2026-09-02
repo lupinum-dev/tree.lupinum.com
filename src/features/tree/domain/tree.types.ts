@@ -2,15 +2,19 @@
  * Domain model for parsed tree structures (framework-agnostic).
  */
 
-export type TreeNodeKind = 'file' | 'directory'
-
-/** Single node in a file tree */
-export interface TreeNode {
-  id: string
+export interface FileNode {
   name: string
-  kind: TreeNodeKind
+  kind: 'file'
+}
+
+export interface DirectoryNode {
+  name: string
+  kind: 'directory'
   children: TreeNode[]
 }
+
+/** A file cannot contain children; directories always own their child list. */
+export type TreeNode = FileNode | DirectoryNode
 
 export interface TreeDiagnostic {
   /** 1-based line number in user input */
@@ -20,12 +24,12 @@ export interface TreeDiagnostic {
   lineContent?: string
 }
 
-export type ParseResult = { ok: true; root: TreeNode } | { ok: false; errors: TreeDiagnostic[] }
+export type ParseResult =
+  | { ok: true; root: DirectoryNode }
+  | { ok: false; errors: TreeDiagnostic[] }
 
-/** Options shared by ASCII/UTF tree renderers */
 export interface TreeRenderOptions {
-  charset?: 'ascii' | 'utf-8'
-  trailingDirSlash?: boolean
-  fullPath?: boolean
-  rootDot?: boolean
+  fullPath: boolean
+  trailingSlash: boolean
+  rootDot: boolean
 }

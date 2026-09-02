@@ -1,35 +1,42 @@
-import type { TreeNode } from '../src/features/tree/domain/tree.types'
+import type { DirectoryNode, TreeNode } from '../src/features/tree/domain/tree.types'
+import type { FormatType } from '../src/features/tree/domain/tree-formatters'
 
-/** Small hand-built tree useful for sanity checks */
-export function createTreeNodeFixture(): TreeNode {
-  const indexJs: TreeNode = {
-    id: 'h-index',
-    name: 'index.js',
-    kind: 'file',
-    children: [],
-  }
-  const src: TreeNode = {
-    id: 'h-src',
-    name: 'src',
-    kind: 'directory',
-    children: [indexJs],
-  }
-  const packageJson: TreeNode = {
-    id: 'h-pkg',
-    name: 'package.json',
-    kind: 'file',
-    children: [],
-  }
-  const app: TreeNode = {
-    id: 'h-app',
-    name: 'app',
-    kind: 'directory',
-    children: [src, packageJson],
-  }
+export const defaultRenderOptions = {
+  fullPath: false,
+  trailingSlash: false,
+  rootDot: true,
+} as const
+
+/** Small hand-built tree useful for formatter sanity checks. */
+export function createTreeNodeFixture(): DirectoryNode {
   return {
-    id: 'h-root',
     name: '.',
     kind: 'directory',
-    children: [app],
+    children: [
+      {
+        name: 'app',
+        kind: 'directory',
+        children: [
+          {
+            name: 'src',
+            kind: 'directory',
+            children: [{ name: 'index.js', kind: 'file' }],
+          },
+          { name: 'package.json', kind: 'file' },
+        ],
+      },
+    ],
   }
+}
+
+// @ts-expect-error Files cannot contain children.
+export const invalidFileNode: TreeNode = { name: 'invalid', kind: 'file', children: [] }
+
+// @ts-expect-error Removed formats cannot enter typed application state.
+export const removedFormat: FormatType = 'yaml'
+
+export function nestedSource(depth: number): string {
+  return Array.from({ length: depth }, (_, index) => `${'  '.repeat(index)}level-${index}`).join(
+    '\n',
+  )
 }

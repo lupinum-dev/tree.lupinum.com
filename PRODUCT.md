@@ -24,10 +24,11 @@ Users paste or edit indented file names, inspect the result beside the source, a
 
 ## Capabilities and Constraints
 
-- Generate UTF-8 and ASCII trees, JSON variants, YAML, XML, Markdown, and dot notation.
+- Generate UTF-8 and ASCII trees, Markdown lists, and lossless Array JSON.
 - Keep multiple named trees and their output settings in browser storage.
 - Import folder structures with the browser directory picker.
 - Copy output and download it as an image.
+- Share one tree through a compact, local-only URL payload.
 - Process all file names and text locally. There is no backend, account, or cross-device sync.
 - Preserve the existing `tree-workspace-v1` browser data contract during modernization.
 

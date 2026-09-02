@@ -2,13 +2,14 @@
 
 A fast, private directory-tree workbench built with Vue, Vite+, and shadcn-vue.
 
-Paste an indented directory list or choose a local folder. The app turns it into a clean tree, JSON, YAML, XML, Markdown, or dot notation while you type.
+Paste an indented directory list or choose a local folder. The app turns it into a clean UTF-8 or ASCII tree, Markdown list, or lossless JSON structure while you type.
 
 ## Why it is useful
 
 - Keep several named trees in one sidebar.
 - Import a folder without uploading its files.
 - Copy generated text or export it as a PNG.
+- Copy a compact link that opens the tree and its output settings in another browser.
 - Adjust paths, trailing slashes, and root display per tree.
 - Keep work automatically in browser storage.
 - Use the full editor by keyboard, including Tab and Shift+Tab indentation.

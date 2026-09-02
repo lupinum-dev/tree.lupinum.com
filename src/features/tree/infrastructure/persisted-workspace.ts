@@ -1,4 +1,9 @@
-import type { PersistedTreeWorkspaceV1, SavedTree } from '../domain/workspace.types'
+import { isFormatType } from '../domain/tree-formatters'
+import {
+  DEFAULT_TREE_OPTIONS,
+  type PersistedTreeWorkspaceV1,
+  type SavedTree,
+} from '../domain/workspace.types'
 
 const WORKSPACE_KEY_V1 = 'tree-workspace-v1'
 const LEGACY_TABS_KEY = 'tree-tabs'
@@ -13,60 +18,79 @@ function safeJsonParse(raw: string | null): unknown {
   }
 }
 
-function isWorkspaceV1(val: unknown): val is PersistedTreeWorkspaceV1 {
-  if (!val || typeof val !== 'object') return false
-  const o = val as Record<string, unknown>
-  return (
-    o.version === 1 &&
-    typeof o.activeTabId === 'string' &&
-    Array.isArray(o.tabs) &&
-    o.tabs.every(isSavedTree)
-  )
-}
+function readSavedTree(value: unknown): SavedTree | null {
+  if (!value || typeof value !== 'object') return null
 
-function isSavedTree(value: unknown): value is SavedTree {
-  if (!value || typeof value !== 'object') return false
   const tree = value as Record<string, unknown>
   const options = tree.options
-  if (!options || typeof options !== 'object') return false
+  if (!options || typeof options !== 'object') return null
   const treeOptions = options as Record<string, unknown>
 
-  return (
-    typeof tree.id === 'string' &&
-    typeof tree.name === 'string' &&
-    typeof tree.source === 'string' &&
-    typeof treeOptions.format === 'string' &&
-    typeof treeOptions.fullPath === 'boolean' &&
-    typeof treeOptions.trailingSlash === 'boolean' &&
-    typeof treeOptions.rootDot === 'boolean'
-  )
-}
-
-/** Read versioned workspace snapshot (or migrate legacy keys once). */
-export function loadPersistedWorkspace(client: Storage): PersistedTreeWorkspaceV1 | null {
-  const fromV1 = safeJsonParse(client.getItem(WORKSPACE_KEY_V1))
-  if (isWorkspaceV1(fromV1)) {
-    return fromV1
-  }
-
-  const tabsRaw = safeJsonParse(client.getItem(LEGACY_TABS_KEY))
-  const activeId = client.getItem(LEGACY_ACTIVE_KEY)
-  if (!Array.isArray(tabsRaw) || tabsRaw.length === 0) {
+  if (
+    typeof tree.id !== 'string' ||
+    typeof tree.name !== 'string' ||
+    typeof tree.source !== 'string' ||
+    typeof treeOptions.format !== 'string' ||
+    typeof treeOptions.fullPath !== 'boolean' ||
+    typeof treeOptions.trailingSlash !== 'boolean' ||
+    typeof treeOptions.rootDot !== 'boolean'
+  ) {
     return null
   }
 
-  const tabs = tabsRaw.filter(isSavedTree)
-  if (tabs.length === 0) return null
-  let activeTabId = typeof activeId === 'string' && activeId ? activeId : (tabs[0]?.id ?? '')
-  if (!tabs.some((t) => t.id === activeTabId)) {
-    activeTabId = tabs[0]!.id
+  return {
+    id: tree.id,
+    name: tree.name,
+    source: tree.source,
+    options: {
+      format: isFormatType(treeOptions.format) ? treeOptions.format : DEFAULT_TREE_OPTIONS.format,
+      fullPath: treeOptions.fullPath,
+      trailingSlash: treeOptions.trailingSlash,
+      rootDot: treeOptions.rootDot,
+    },
+  }
+}
+
+function readWorkspace(value: unknown): PersistedTreeWorkspaceV1 | null {
+  if (!value || typeof value !== 'object') return null
+  const workspace = value as Record<string, unknown>
+  if (
+    workspace.version !== 1 ||
+    typeof workspace.activeTabId !== 'string' ||
+    !Array.isArray(workspace.tabs)
+  ) {
+    return null
   }
 
-  const migrated: PersistedTreeWorkspaceV1 = {
+  const tabs = workspace.tabs.map(readSavedTree).filter((tree) => tree !== null)
+  if (tabs.length === 0) return null
+
+  return {
     version: 1,
-    activeTabId,
+    activeTabId: tabs.some((tree) => tree.id === workspace.activeTabId)
+      ? workspace.activeTabId
+      : tabs[0]!.id,
     tabs,
   }
+}
+
+/** Read the versioned workspace snapshot, normalizing obsolete formats at the boundary. */
+export function loadPersistedWorkspace(client: Storage): PersistedTreeWorkspaceV1 | null {
+  const current = readWorkspace(safeJsonParse(client.getItem(WORKSPACE_KEY_V1)))
+  if (current) return current
+
+  const legacyTabs = safeJsonParse(client.getItem(LEGACY_TABS_KEY))
+  if (!Array.isArray(legacyTabs)) return null
+
+  const tabs = legacyTabs.map(readSavedTree).filter((tree) => tree !== null)
+  if (tabs.length === 0) return null
+
+  const requestedActiveId = client.getItem(LEGACY_ACTIVE_KEY)
+  const activeTabId =
+    requestedActiveId && tabs.some((tree) => tree.id === requestedActiveId)
+      ? requestedActiveId
+      : tabs[0]!.id
+  const migrated: PersistedTreeWorkspaceV1 = { version: 1, activeTabId, tabs }
 
   client.setItem(WORKSPACE_KEY_V1, JSON.stringify(migrated))
   client.removeItem(LEGACY_TABS_KEY)
@@ -76,14 +100,12 @@ export function loadPersistedWorkspace(client: Storage): PersistedTreeWorkspaceV
 
 export function persistWorkspace(
   client: Storage,
-  workspace: Omit<PersistedTreeWorkspaceV1, 'version'> & { tabs: SavedTree[]; activeTabId: string },
-) {
-  const payload: PersistedTreeWorkspaceV1 = {
-    version: 1,
-    activeTabId: workspace.activeTabId,
-    tabs: workspace.tabs,
-  }
-  client.setItem(WORKSPACE_KEY_V1, JSON.stringify(payload))
+  workspace: Omit<PersistedTreeWorkspaceV1, 'version'>,
+): void {
+  client.setItem(
+    WORKSPACE_KEY_V1,
+    JSON.stringify({ version: 1, ...workspace } satisfies PersistedTreeWorkspaceV1),
+  )
 }
 
 export { WORKSPACE_KEY_V1 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Copy, ImageDown, SlidersHorizontal, Sparkles } from '@lucide/vue'
+import { ChevronDown, Copy, ImageDown, Link, SlidersHorizontal, Sparkles } from '@lucide/vue'
 import TreeOutputSettings from '@/components/TreeOutputSettings.vue'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,6 +46,16 @@ const workspace = useTreeWorkspace()
         </Popover>
       </div>
       <div class="ml-auto flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!workspace.output.value"
+          @click="workspace.copyShareLink"
+        >
+          <Link class="size-4" aria-hidden="true" />
+          <span class="hidden sm:inline">Copy link</span>
+          <span class="sr-only sm:hidden">Copy share link</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"

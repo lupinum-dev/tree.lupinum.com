@@ -1,18 +1,23 @@
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { describe, it, expect } from 'vite-plus/test'
-import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
-import { formatTreeFromNode } from '../src/features/tree/domain/tree-formatters'
+import { fileURLToPath } from 'node:url'
+import { describe, expect, it } from 'vite-plus/test'
+import { parseInputOrThrow } from '../src/features/tree/domain/parse-tree-input'
+import { formatTree, TREE_RENDERERS } from '../src/features/tree/domain/tree-formatters'
+import { defaultRenderOptions } from './test-helpers'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const fixture = (name: string) => readFileSync(join(here, 'fixtures', name), 'utf8')
 
-describe('golden fixtures', () => {
-  it('basic input matches utf-8 tree snapshot', () => {
-    const input = fixture('basic.input.txt')
-    const tree = parseInput(input.trim())
-    const out = formatTreeFromNode(tree, 'utf-8', { rootDot: true })
-    expect(out).toMatchSnapshot()
+describe('format golden fixture', () => {
+  it('locks the output of every public format', () => {
+    const source = readFileSync(join(here, 'fixtures', 'basic.input.txt'), 'utf8').trim()
+    const tree = parseInputOrThrow(source)
+    const outputs = Object.fromEntries(
+      TREE_RENDERERS.map((renderer) => [
+        renderer.id,
+        formatTree(tree, renderer.id, defaultRenderOptions),
+      ]),
+    )
+    expect(outputs).toMatchSnapshot()
   })
 })

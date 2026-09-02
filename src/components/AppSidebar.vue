@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Check,
+  Copy,
   CodeXml,
   FolderTree,
   Info,
@@ -163,6 +164,10 @@ function selectTree(id: string) {
                   </SidebarMenuAction>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="start" class="w-40">
+                  <DropdownMenuItem @select="workspace.duplicateTree(tree.id)">
+                    <Copy class="size-4" aria-hidden="true" />
+                    Duplicate
+                  </DropdownMenuItem>
                   <DropdownMenuItem @select="openRename(tree)">Rename</DropdownMenuItem>
                   <DropdownMenuItem @select="openReset(tree)">
                     <RotateCcw class="size-4" aria-hidden="true" />

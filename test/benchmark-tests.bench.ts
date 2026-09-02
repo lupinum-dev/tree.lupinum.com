@@ -1,124 +1,34 @@
 import { bench, describe } from 'vite-plus/test'
-import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
 import { generateTree } from '../src/features/tree/domain/generate-tree'
+import { parseInputOrThrow } from '../src/features/tree/domain/parse-tree-input'
 import { formatTree } from '../src/features/tree/domain/tree-formatters'
+import { defaultRenderOptions, nestedSource } from './test-helpers'
 
-/**
- * Generates a deep file structure string for testing performance
- * @param depth How deep to make the tree
- * @param filesPerLevel How many files to create at each level
- * @returns A string representing a deeply nested file structure
- */
-function generateDeepStructure(depth: number, filesPerLevel: number): string {
-  const lines: string[] = ['root']
+const wideInput = ['root', ...Array.from({ length: 9_999 }, (_, index) => `  file-${index}`)].join(
+  '\n',
+)
+const deepInput = nestedSource(256)
+const wideTree = parseInputOrThrow(wideInput)
+const deepTree = parseInputOrThrow(deepInput)
 
-  function addLevel(currentDepth: number, prefix: string) {
-    if (currentDepth >= depth) return
-
-    // Add files at this level
-    for (let i = 0; i < filesPerLevel; i++) {
-      lines.push(`${prefix}file-${currentDepth}-${i}.txt`)
-    }
-
-    // Add directory for next level
-    const nextDir = `${prefix}level-${currentDepth}`
-    lines.push(nextDir)
-
-    // Recurse to next level
-    addLevel(currentDepth + 1, `${nextDir}  `)
-  }
-
-  addLevel(0, '  ')
-  return lines.join('\n')
-}
-
-/**
- * Generates a wide file structure string for testing performance
- * @param width How many top-level directories to create
- * @param filesPerDir How many files in each directory
- * @returns A string representing a wide file structure
- */
-function generateWideStructure(width: number, filesPerDir: number): string {
-  const lines: string[] = ['root']
-
-  for (let i = 0; i < width; i++) {
-    lines.push(`  dir-${i}`)
-
-    for (let j = 0; j < filesPerDir; j++) {
-      lines.push(`    file-${i}-${j}.txt`)
-    }
-  }
-
-  return lines.join('\n')
-}
-
-// Prepare structures for benchmarks
-const smallInput = generateDeepStructure(3, 3)
-const mediumInput = generateDeepStructure(5, 5)
-const largeInput = generateWideStructure(50, 5)
-
-const smallStructure = parseInput(smallInput)
-const mediumStructure = parseInput(mediumInput)
-const largeStructure = parseInput(largeInput)
-
-describe('Parse Input Benchmarks', () => {
-  bench('parse small structure', () => {
-    parseInput(smallInput)
+describe('tree engine benchmarks', () => {
+  bench('parse a 256-level tree', () => {
+    parseInputOrThrow(deepInput)
   })
 
-  bench('parse medium structure', () => {
-    parseInput(mediumInput)
+  bench('parse a 10,000-node tree', () => {
+    parseInputOrThrow(wideInput)
   })
 
-  bench('parse large structure', () => {
-    parseInput(largeInput)
-  })
-})
-
-describe('Generate Tree Benchmarks', () => {
-  bench('generate small tree (utf-8)', () => {
-    generateTree(smallStructure, { charset: 'utf-8' })
+  bench('render a 256-level UTF-8 tree', () => {
+    generateTree(deepTree)
   })
 
-  bench('generate small tree (ascii)', () => {
-    generateTree(smallStructure, { charset: 'ascii' })
+  bench('render a 10,000-node UTF-8 tree', () => {
+    generateTree(wideTree)
   })
 
-  bench('generate medium tree (utf-8)', () => {
-    generateTree(mediumStructure, { charset: 'utf-8' })
-  })
-
-  bench('generate large tree (utf-8)', () => {
-    generateTree(largeStructure, { charset: 'utf-8' })
-  })
-})
-
-describe('Format Tree Benchmarks', () => {
-  bench('format as utf-8', () => {
-    formatTree(mediumStructure, 'utf-8')
-  })
-
-  bench('format as json-nested', () => {
-    formatTree(mediumStructure, 'json-nested')
-  })
-
-  bench('format as json-array', () => {
-    formatTree(mediumStructure, 'json-array')
-  })
-
-  bench('format as json-flat', () => {
-    formatTree(mediumStructure, 'json-flat')
-  })
-
-  bench('format as yaml', () => {
-    formatTree(mediumStructure, 'yaml')
-  })
-
-  bench('format as xml', () => {
-    formatTree(mediumStructure, 'xml')
-  })
-
-  bench('format as markdown', () => {
-    formatTree(mediumStructure, 'markdown')
+  bench('render a 10,000-node Array JSON tree', () => {
+    formatTree(wideTree, 'json-array', defaultRenderOptions)
   })
 })

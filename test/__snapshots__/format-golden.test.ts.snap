@@ -1,9 +1,47 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`golden fixtures > basic input matches utf-8 tree snapshot 1`] = `
-".
+exports[`format golden fixture > locks the output of every public format 1`] = `
+{
+  "ascii": ".
+\`-- app
+    |-- src
+    |   \`-- index.js
+    \`-- package.json",
+  "json-array": "{
+  "name": "root",
+  "type": "directory",
+  "children": [
+    {
+      "name": "app",
+      "type": "directory",
+      "children": [
+        {
+          "name": "src",
+          "type": "directory",
+          "children": [
+            {
+              "name": "index.js",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "package.json",
+          "type": "file"
+        }
+      ]
+    }
+  ]
+}",
+  "markdown": "* app/
+  * src/
+    * index\\.js
+  * package\\.json
+",
+  "utf-8": ".
 └── app
     ├── src
     │   └── index.js
-    └── package.json"
+    └── package.json",
+}
 `;

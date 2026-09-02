@@ -49,4 +49,20 @@ describe('persisted workspace', () => {
 
     expect(loadPersistedWorkspace(localStorage)).toBeNull()
   })
+
+  it.each(['json-nested', 'json-flat', 'yaml', 'xml', 'dot'])(
+    'maps the removed %s format to UTF-8 without losing content',
+    (format) => {
+      localStorage.setItem(
+        WORKSPACE_KEY_V1,
+        JSON.stringify({
+          version: 1,
+          activeTabId: savedTree.id,
+          tabs: [{ ...savedTree, options: { ...savedTree.options, format } }],
+        }),
+      )
+
+      expect(loadPersistedWorkspace(localStorage)?.tabs[0]).toEqual(savedTree)
+    },
+  )
 })

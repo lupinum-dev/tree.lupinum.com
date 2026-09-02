@@ -1,7 +1,7 @@
 import { parseTreeInput } from './parse-tree-input'
-import type { FormatType, TreeFormatOptions } from './tree-formatters-impl'
+import { formatTree, type FormatType } from './tree-formatters'
 import type { TreeDiagnostic } from './tree.types'
-import { formatTreeFromNode } from './tree-format-registry'
+import type { TreeRenderOptions } from './tree.types'
 
 export type BuildTreeOutput = { ok: true; output: string } | { ok: false; errors: TreeDiagnostic[] }
 
@@ -9,7 +9,7 @@ export type BuildTreeOutput = { ok: true; output: string } | { ok: false; errors
 export function buildParsedTreeOutput(
   source: string,
   format: FormatType,
-  options: TreeFormatOptions,
+  options: TreeRenderOptions,
 ): BuildTreeOutput {
   const trimmed = source.trim()
   if (!trimmed) {
@@ -22,12 +22,7 @@ export function buildParsedTreeOutput(
   }
 
   try {
-    const output = formatTreeFromNode(parsed.root, format, {
-      trailingDirSlash: options.trailingDirSlash ?? options.trailingSlash,
-      fullPath: options.fullPath,
-      rootDot: options.rootDot,
-      charset: options.charset,
-    })
+    const output = formatTree(parsed.root, format, options)
     return { ok: true, output }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to render tree'

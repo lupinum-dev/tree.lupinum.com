@@ -19,7 +19,7 @@ export interface LineStringSet {
 }
 
 /** Contains all strings for tree rendering */
-export const LINE_STRINGS: { [charset: string]: LineStringSet } = {
+export const LINE_STRINGS = {
   ascii: {
     CHILD: '|-- ',
     LAST_CHILD: '`-- ',
@@ -32,4 +32,4 @@ export const LINE_STRINGS: { [charset: string]: LineStringSet } = {
     DIRECTORY: '│   ',
     EMPTY: '    ',
   },
-}
+} as const satisfies Record<'ascii' | 'utf-8', LineStringSet>
