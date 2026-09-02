@@ -11,13 +11,10 @@ import {
   RotateCcw,
   Sun,
 } from '@lucide/vue'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import type { SavedTree } from '@/features/tree/domain/workspace.types'
-import type { FormatType } from '@/features/tree/domain/tree-formatters-impl'
-import { formatGroupsFromRegistry } from '@/features/tree/domain/tree-format-registry'
 import { useTreeWorkspace } from '@/features/tree/use-tree-workspace'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,15 +24,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Sidebar,
   SidebarContent,
@@ -49,7 +37,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
-  SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
 import {
@@ -65,18 +52,12 @@ import {
 
 const workspace = useTreeWorkspace()
 const sidebar = useSidebar()
-const formatGroups = formatGroupsFromRegistry()
 const dialogTree = ref<SavedTree | null>(null)
 const renameOpen = ref(false)
 const deleteOpen = ref(false)
 const resetOpen = ref(false)
 const nextName = ref('')
 const isDark = ref(false)
-
-const activeFormat = computed({
-  get: () => workspace.activeTree.value?.options.format ?? 'utf-8',
-  set: (value: FormatType) => workspace.updateFormat(value),
-})
 
 onMounted(() => {
   isDark.value = document.documentElement.classList.contains('dark')
@@ -201,59 +182,6 @@ function selectTree(id: string) {
           </SidebarMenu>
           <div v-else class="space-y-2 px-2 py-1" aria-label="Loading saved trees">
             <SidebarMenuSkeleton v-for="item in 3" :key="item" :show-icon="true" />
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <SidebarSeparator />
-
-      <SidebarGroup>
-        <SidebarGroupLabel>Output settings</SidebarGroupLabel>
-        <SidebarGroupContent v-if="workspace.activeTree.value" class="space-y-4 px-2 pb-1">
-          <div class="space-y-1.5">
-            <Label for="output-format" class="text-xs text-muted-foreground">Format</Label>
-            <Select v-model="activeFormat">
-              <SelectTrigger id="output-format" class="w-full bg-background/60">
-                <SelectValue placeholder="Choose a format" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup v-for="group in formatGroups" :key="group.name">
-                  <SelectLabel>{{ group.name }}</SelectLabel>
-                  <SelectItem v-for="format in group.formats" :key="format.id" :value="format.id">
-                    {{ format.label }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-3">
-            <div class="flex min-h-11 items-center gap-3">
-              <Checkbox
-                id="full-path"
-                :model-value="workspace.activeTree.value.options.fullPath"
-                @update:model-value="workspace.updateOption('fullPath', $event === true)"
-              />
-              <Label for="full-path" class="cursor-pointer font-normal">Show full paths</Label>
-            </div>
-            <div class="flex min-h-11 items-center gap-3">
-              <Checkbox
-                id="trailing-slash"
-                :model-value="workspace.activeTree.value.options.trailingSlash"
-                @update:model-value="workspace.updateOption('trailingSlash', $event === true)"
-              />
-              <Label for="trailing-slash" class="cursor-pointer font-normal"
-                >Add trailing slashes</Label
-              >
-            </div>
-            <div class="flex min-h-11 items-center gap-3">
-              <Checkbox
-                id="root-dot"
-                :model-value="workspace.activeTree.value.options.rootDot"
-                @update:model-value="workspace.updateOption('rootDot', $event === true)"
-              />
-              <Label for="root-dot" class="cursor-pointer font-normal">Show root dot</Label>
-            </div>
           </div>
         </SidebarGroupContent>
       </SidebarGroup>

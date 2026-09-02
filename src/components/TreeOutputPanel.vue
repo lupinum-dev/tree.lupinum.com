@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { Copy, ImageDown, SlidersHorizontal, Sparkles } from '@lucide/vue'
+import { ChevronDown, Copy, ImageDown, SlidersHorizontal, Sparkles } from '@lucide/vue'
+import TreeOutputSettings from '@/components/TreeOutputSettings.vue'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useSidebar } from '@/components/ui/sidebar'
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { useTreeWorkspace } from '@/features/tree/use-tree-workspace'
 
 const workspace = useTreeWorkspace()
-const sidebar = useSidebar()
 </script>
 
 <template>
@@ -17,19 +23,27 @@ const sidebar = useSidebar()
     <div class="flex min-h-13 shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2">
       <div class="flex min-w-0 items-center gap-2">
         <h2 id="output-heading" class="text-sm font-semibold">Output</h2>
-        <Badge variant="secondary" class="hidden font-normal md:inline-flex">{{
-          workspace.activeFormatLabel.value
-        }}</Badge>
-        <Button
-          variant="ghost"
-          size="xs"
-          class="font-normal md:hidden"
-          aria-label="Open output format settings"
-          @click="sidebar.toggleSidebar"
-        >
-          <SlidersHorizontal class="size-3.5" aria-hidden="true" />
-          {{ workspace.activeFormatLabel.value }}
-        </Button>
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+              variant="secondary"
+              size="xs"
+              class="font-normal"
+              :aria-label="`Configure output: ${workspace.activeFormatLabel.value}`"
+            >
+              <SlidersHorizontal class="size-3.5" aria-hidden="true" />
+              {{ workspace.activeFormatLabel.value }}
+              <ChevronDown class="size-3.5 text-muted-foreground" aria-hidden="true" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" class="w-80 max-w-[calc(100vw-2rem)]">
+            <PopoverHeader>
+              <PopoverTitle>Output settings</PopoverTitle>
+              <PopoverDescription>Changes apply and save automatically.</PopoverDescription>
+            </PopoverHeader>
+            <TreeOutputSettings />
+          </PopoverContent>
+        </Popover>
       </div>
       <div class="ml-auto flex items-center gap-2">
         <Button

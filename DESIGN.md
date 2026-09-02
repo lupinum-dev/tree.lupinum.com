@@ -8,11 +8,11 @@ The visual language is compact and neutral, based on shadcn-vue's `reka-vega` st
 
 ## Information architecture
 
-- The sidebar owns the product identity, saved trees, output settings, local-storage reassurance, theme control, and external links.
+- The sidebar owns the product identity, saved trees, local-storage reassurance, theme control, and external links.
 - The sticky workspace header owns the active tree name, sidebar toggle, and save status.
 - The main workspace contains two peer sections: **Tree source** and **Output**.
 - Tree management is secondary to editing. Rename, reset, and delete live in each tree's overflow menu; rename and destructive changes use confirmation dialogs.
-- Output settings are persistent context. They remain in the desktop sidebar and are reached from the format action beside the Output heading on mobile.
+- Output settings are progressive context. The current format beside the Output heading opens one responsive popover containing every output option; the sidebar does not duplicate them.
 
 ## Color and tokens
 
@@ -51,7 +51,7 @@ Light borders use Slate 200 and inputs use Slate 300. Dark borders use a restrai
 
 Desktop uses a fixed `17rem` left sidebar and shadcn's inset workspace with an `8px` outer gutter, rounded frame, and subtle shadow. Source and output each occupy half of the remaining width when the workspace has enough usable space and fill the inset canvas below the `52px` workspace header. The source has the vertical divider; the workspace header stays sticky.
 
-The panes stack when the workspace itself is narrower than `45rem`, including at 200% text scaling. The sidebar becomes an off-canvas sheet capped at the viewport width minus a `16px` gutter on each side. Stacked panes use a `28rem` minimum height and let long content extend the page instead of creating nested vertical scrolling. The output format badge becomes a compact settings action that opens the sidebar. Export copy changes from “Export PNG” to “Save PNG” at the small breakpoint, while Copy output remains explicit. The document has a `320px` minimum width.
+The panes stack when the workspace itself is narrower than `45rem`, including at 200% text scaling. The sidebar becomes an off-canvas sheet capped at the viewport width minus a `16px` gutter on each side. Stacked panes use a `28rem` minimum height and let long content extend the page instead of creating nested vertical scrolling. The output settings popover is capped at the viewport width minus a `16px` gutter on each side. Export copy changes from “Export PNG” to “Save PNG” at the small breakpoint, while Copy output remains explicit. The document has a `320px` minimum width.
 
 Keep action groups intact when space narrows. Section headers may wrap; content must not create horizontal page scrolling. Tree names truncate, while editor and output surfaces handle their own overflow.
 
@@ -59,7 +59,7 @@ Keep action groups intact when space narrows. Section headers may wrap; content 
 
 - **Primary:** New tree and Copy output use the Cyan filled button. Use this treatment for the clearest next or repeat action, not every available action.
 - **Secondary:** Choose folder and Export/Save PNG use outlined buttons.
-- **Utility:** Sidebar toggle, format access on mobile, theme, GitHub, and Lupinum links use ghost or icon buttons.
+- **Utility:** Sidebar toggle, output settings trigger, theme, GitHub, and Lupinum links use quiet secondary, ghost, or icon buttons.
 - **Selected:** The active tree uses the sidebar accent fill, medium text, `aria-pressed`, and a Cyan check.
 - **Destructive:** Delete is red and confirmed. It is disabled when only one tree remains. Reset is confirmed but is not styled as deletion.
 - Lucide icons reinforce labels. Keep visible text on important actions; icon-only controls require an accessible name.
@@ -67,7 +67,7 @@ Keep action groups intact when space narrows. Section headers may wrap; content 
 ## States and feedback
 
 - **Loading:** Before browser state is ready, show three sidebar row skeletons and two large pulsing workspace skeletons. Label both loading regions for assistive technology.
-- **Empty source/output:** Disable copy and export. Show the dashed Output card with “Output appears here” and instructions to type or choose a folder.
+- **Empty source/output:** Disable copy and export. Show “Output appears here” in the flat Output plane with instructions to type or choose a folder.
 - **Parse error:** Mark the editor invalid with destructive border/ring, show the first error with line number in an alert, hide the last valid output, and replace the empty-state message with “Fix the source to continue.”
 - **Saving:** The sticky header is the persistent status location: spinner plus “Saving…”, Cyan check plus “Saved locally”, or destructive icon plus “Not saved”. Announce it through a polite live region.
 - **Importing:** Disable Choose folder and change its label to “Reading…”.
