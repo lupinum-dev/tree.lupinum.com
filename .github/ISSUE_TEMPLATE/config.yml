@@ -7,6 +7,6 @@ contact_links:
     }
   - {
       name: Security report,
-      url: 'https://github.com/lupinum-dev/tree.lupinum.com/security/advisories/new',
+      url: 'https://github.com/lupinum-dev/lupinum-tree/security/advisories/new',
       about: 'Report a vulnerability privately.',
     }

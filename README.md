@@ -3,7 +3,7 @@
 <p align="center">Turn indented text or a local folder into clean ASCII and Unicode directory trees.</p>
 
 <p align="center">
-  <a href="https://github.com/lupinum-dev/tree.lupinum.com/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/lupinum-dev/tree.lupinum.com/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/lupinum-dev/lupinum-tree/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/lupinum-dev/lupinum-tree/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Apache-2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
 </p>
 
@@ -34,8 +34,8 @@ The hosted application needs a modern browser. Local development needs:
 ## Installation
 
 ```sh
-git clone https://github.com/lupinum-dev/tree.lupinum.com.git
-cd tree.lupinum.com
+git clone https://github.com/lupinum-dev/lupinum-tree.git
+cd lupinum-tree
 pnpm install --frozen-lockfile
 ```
 
@@ -97,7 +97,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before you open a pull request. Run `pnp
 
 ## Support and security
 
-Ask questions in the [Lupinum OSS Discord](https://discord.gg/RPH6SeA36N). Report vulnerabilities through [GitHub private vulnerability reporting](https://github.com/lupinum-dev/tree.lupinum.com/security/advisories/new). Do not report a vulnerability in a public issue.
+Ask questions in the [Lupinum OSS Discord](https://discord.gg/RPH6SeA36N). Report vulnerabilities through [GitHub private vulnerability reporting](https://github.com/lupinum-dev/lupinum-tree/security/advisories/new). Do not report a vulnerability in a public issue.
 
 ## License
 

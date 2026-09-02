@@ -20,7 +20,7 @@ describe('product guide', () => {
     ).toContain('noopener')
     expect(wrapper.get('svg[viewBox="0 0 24 24"]')).toBeDefined()
     expect(
-      wrapper.get('a[href="https://github.com/lupinum-dev/tree.lupinum.com"]').attributes('rel'),
+      wrapper.get('a[href="https://github.com/lupinum-dev/lupinum-tree"]').attributes('rel'),
     ).toContain('noopener')
 
     await wrapper.get<HTMLTextAreaElement>('#guide-tree-source').setValue(`project

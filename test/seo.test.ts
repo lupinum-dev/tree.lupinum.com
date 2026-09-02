@@ -32,7 +32,7 @@ describe('search and discovery metadata', () => {
     expect(prerender).toContain("page: 'guide'")
     expect(JSON.parse(manifest)).toMatchObject({ name: 'Lupinum Tree', start_url: '/' })
     expect(security).toContain(
-      'https://github.com/lupinum-dev/tree.lupinum.com/security/advisories/new',
+      'https://github.com/lupinum-dev/lupinum-tree/security/advisories/new',
     )
   })
 })
