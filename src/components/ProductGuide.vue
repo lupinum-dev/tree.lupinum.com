@@ -81,7 +81,7 @@ const faqs = [
         </nav>
 
         <a
-          href="https://github.com/lupinum-dev/tree.lupinum.com"
+          href="https://github.com/lupinum-dev/lupinum-tree"
           target="_blank"
           rel="noopener noreferrer"
           class="ml-auto grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 sm:ml-0"
@@ -327,7 +327,7 @@ const faqs = [
           <a class="hover:text-foreground" href="/">Workbench</a>
           <a
             class="inline-flex items-center gap-1.5 hover:text-foreground"
-            href="https://github.com/lupinum-dev/tree.lupinum.com"
+            href="https://github.com/lupinum-dev/lupinum-tree"
             target="_blank"
             rel="noopener noreferrer"
           >

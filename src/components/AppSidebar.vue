@@ -230,7 +230,7 @@ function selectTree(id: string) {
         </Button>
         <Button variant="ghost" size="icon-sm" as-child>
           <a
-            href="https://github.com/lupinum-dev/tree.lupinum.com"
+            href="https://github.com/lupinum-dev/lupinum-tree"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="View source on GitHub"
