@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { generateTree } from '../app/lib/generate-tree'
-import { parseInput } from '../app/lib/parse-input'
-import type { TreeNode } from '../app/lib/FileStructure'
+import { describe, it, expect } from 'vite-plus/test'
+import { generateTree } from '../src/features/tree/domain/generate-tree'
+import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
+import type { TreeNode } from '../src/features/tree/domain/tree.types'
 
 // Helper function to create a simple test structure
 function createTestStructure(): TreeNode {
@@ -32,13 +32,9 @@ describe('generateTree', () => {
     expect(result).toContain('│')
 
     // Check that the whole tree structure is formatted correctly
-    expect(result).toBe([
-      '.',
-      '└── app',
-      '    ├── src',
-      '    │   └── index.js',
-      '    └── package.json'
-    ].join('\n'))
+    expect(result).toBe(
+      ['.', '└── app', '    ├── src', '    │   └── index.js', '    └── package.json'].join('\n'),
+    )
   })
 
   it('should generate a tree with ascii charset when specified', () => {
@@ -51,13 +47,9 @@ describe('generateTree', () => {
     expect(result).toContain('|')
 
     // Check that the whole tree structure is formatted correctly
-    expect(result).toBe([
-      '.',
-      '`-- app',
-      '    |-- src',
-      '    |   `-- index.js',
-      '    `-- package.json'
-    ].join('\n'))
+    expect(result).toBe(
+      ['.', '`-- app', '    |-- src', '    |   `-- index.js', '    `-- package.json'].join('\n'),
+    )
   })
 
   it('should generate a tree without root dot when specified', () => {
@@ -68,12 +60,7 @@ describe('generateTree', () => {
     expect(result).not.toMatch(/^\./)
 
     // Check that the tree still shows the rest of the structure
-    expect(result).toBe([
-      'app',
-      '├── src',
-      '│   └── index.js',
-      '└── package.json'
-    ].join('\n'))
+    expect(result).toBe(['app', '├── src', '│   └── index.js', '└── package.json'].join('\n'))
   })
 
   it('should append trailing slashes to directories when specified', () => {
@@ -89,13 +76,9 @@ describe('generateTree', () => {
     expect(result).not.toContain('package.json/')
 
     // Check complete output
-    expect(result).toBe([
-      '.',
-      '└── app/',
-      '    ├── src/',
-      '    │   └── index.js',
-      '    └── package.json'
-    ].join('\n'))
+    expect(result).toBe(
+      ['.', '└── app/', '    ├── src/', '    │   └── index.js', '    └── package.json'].join('\n'),
+    )
   })
 
   it('should print full paths when specified', () => {
@@ -107,20 +90,23 @@ describe('generateTree', () => {
     expect(result).toContain('app/package.json')
 
     // Check complete output
-    expect(result).toBe([
-      '.',
-      '└── app',
-      '    ├── app/src',
-      '    │   └── app/src/index.js',
-      '    └── app/package.json'
-    ].join('\n'))
+    expect(result).toBe(
+      [
+        '.',
+        '└── app',
+        '    ├── app/src',
+        '    │   └── app/src/index.js',
+        '    └── app/package.json',
+      ].join('\n'),
+    )
   })
 
   it('should throw an error for unknown charset', () => {
     const structure = createTestStructure()
     // @ts-expect-error Testing invalid charset
-    expect(() => generateTree(structure, { charset: 'invalid' }))
-      .toThrow('Unknown charset: invalid')
+    expect(() => generateTree(structure, { charset: 'invalid' })).toThrow(
+      'Unknown charset: invalid',
+    )
   })
 
   it('should handle a complex nested tree', () => {
@@ -146,7 +132,7 @@ describe('generateTree', () => {
       '    index.html',
       '    favicon.ico',
       '  package.json',
-      '  README.md'
+      '  README.md',
     ].join('\n')
 
     const structure = parseInput(input)
@@ -160,12 +146,12 @@ describe('generateTree', () => {
 
     // Verify proper nesting with indentation
     const lines = result.split('\n')
-    const projectLine = lines.findIndex(line => line.endsWith('project'))
+    const projectLine = lines.findIndex((line) => line.endsWith('project'))
     expect(projectLine).toBeGreaterThanOrEqual(0)
     expect(lines[projectLine + 1]?.includes('├──')).toBe(true)
     expect(lines[projectLine + 1]?.includes('src')).toBe(true)
 
-    const readmeLine = lines.findIndex(line => line.endsWith('README.md'))
+    const readmeLine = lines.findIndex((line) => line.endsWith('README.md'))
     expect(readmeLine).toBeGreaterThanOrEqual(0)
     expect(lines[readmeLine]?.includes('└──')).toBe(true)
   })
@@ -175,7 +161,7 @@ describe('generateTree', () => {
       id: 'empty-root',
       name: '.',
       kind: 'directory',
-      children: []
+      children: [],
     }
 
     const result = generateTree(structure)
@@ -187,7 +173,7 @@ describe('generateTree', () => {
     const result = generateTree(structure, {
       charset: 'ascii',
       rootDot: false,
-      trailingDirSlash: true
+      trailingDirSlash: true,
     })
 
     // Check combined features are working
@@ -197,11 +183,6 @@ describe('generateTree', () => {
     expect(result).not.toMatch(/^\./)
 
     // Check complete output
-    expect(result).toBe([
-      'app/',
-      '|-- src/',
-      '|   `-- index.js',
-      '`-- package.json'
-    ].join('\n'))
+    expect(result).toBe(['app/', '|-- src/', '|   `-- index.js', '`-- package.json'].join('\n'))
   })
 })

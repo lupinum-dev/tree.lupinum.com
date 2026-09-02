@@ -1,7 +1,7 @@
-import { bench, describe } from 'vitest'
-import { parseInput } from '../app/lib/parse-input'
-import { generateTree } from '../app/lib/generate-tree'
-import { formatTree } from '../app/lib/tree-formatters'
+import { bench, describe } from 'vite-plus/test'
+import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
+import { generateTree } from '../src/features/tree/domain/generate-tree'
+import { formatTree } from '../src/features/tree/domain/tree-formatters'
 
 /**
  * Generates a deep file structure string for testing performance

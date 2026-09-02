@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="application-name" content="ASCII Tree Generator" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="description"
+      content="Free ASCII and Unicode folder-tree maker for README files, documentation, and AI prompts. Everything runs locally in your browser."
+    />
+    <link rel="canonical" href="https://tree.lupinum.com/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tree.lupinum.com/" />
+    <meta property="og:site_name" content="ASCII Tree Generator" />
+    <meta property="og:title" content="ASCII Tree Generator" />
+    <meta
+      property="og:description"
+      content="Create clean folder trees for README files, documentation, chats, and AI prompts."
+    />
+    <meta property="og:image" content="https://tree.lupinum.com/apple-touch-icon.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ASCII Tree Generator" />
+    <meta
+      name="twitter:description"
+      content="Create clean folder trees for README files, documentation, chats, and AI prompts."
+    />
+    <meta name="twitter:image" content="https://tree.lupinum.com/apple-touch-icon.png" />
+    <title>ASCII Tree Generator — folder trees for README files and docs</title>
+    <script>
+      ;(() => {
+        let stored = null
+        try {
+          stored = localStorage.getItem('tree-theme')
+        } catch {
+          // Theme still follows the operating system when browser storage is unavailable.
+        }
+        const dark =
+          stored === 'dark' || (!stored && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+      })()
+    </script>
+  </head>
+  <body>
+    <!--
+      THESIS: A directory workbench where saved trees, source, and result stay visible; it refuses the old stack of tabs, cards, and repeated controls.
+      OWN-WORLD: Neutral Geist surfaces, one quiet emerald signal, continuous work planes, compact shadcn controls, and mono only for tree data.
+      STORY: Choose or create a tree, edit its source, tune the format, and copy a correct result without leaving the workspace.
+      FIRST VIEWPORT: A 272px tree-and-settings rail beside a flexible two-pane editor; Copy output stays in the result header.
+      FORM: Desktop editing instrument with an off-canvas mobile rail; pinned Lupinum workbench direction.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <div id="app"><!--ssr-outlet--></div>
+    <script type="module" src="/src/entry-client.ts"></script>
+  </body>
+</html>

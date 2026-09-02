@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { describe, it, expect } from 'vitest'
-import { parseInput } from '../app/lib/parse-input'
-import { formatTreeFromNode } from '../app/lib/tree-formatters'
+import { describe, it, expect } from 'vite-plus/test'
+import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
+import { formatTreeFromNode } from '../src/features/tree/domain/tree-formatters'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const fixture = (name: string) => readFileSync(join(here, 'fixtures', name), 'utf8')

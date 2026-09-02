@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vite-plus/test'
 import {
   splitInputLines,
   parseTreeInput,
-  parseInputOrThrow as parseInput
-} from '../app/lib/parse-input'
-import type { TreeNode } from '../app/features/tree/domain/tree.types'
+  parseInputOrThrow as parseInput,
+} from '../src/features/tree/domain/parse-tree-input'
+import type { TreeNode } from '../src/features/tree/domain/tree.types'
 
 describe('splitInputLines', () => {
   it('should split a simple string into RawLine records', () => {
@@ -48,7 +48,7 @@ describe('splitInputLines', () => {
 function getChild(root: TreeNode, ...names: string[]): TreeNode {
   let cur: TreeNode = root
   for (const name of names) {
-    const next = cur.children.find(c => c.name === name)
+    const next = cur.children.find((c) => c.name === name)
     if (!next) throw new Error(`Missing "${name}" under ${cur.name}`)
     cur = next
   }
@@ -77,7 +77,7 @@ describe('parseTreeInput', () => {
     const r = parseTreeInput('app\n        bad')
     expect(r.ok).toBe(false)
     if (r.ok) return
-    expect(r.errors.some(e => e.line >= 2)).toBe(true)
+    expect(r.errors.some((e) => e.line >= 2)).toBe(true)
   })
 })
 
@@ -110,14 +110,14 @@ describe('parseInput', () => {
     const result = parseInput(input)
     const app = getChild(result, 'app')
     expect(app.children).toHaveLength(3)
-    expect(app.children.every(c => c.kind === 'file')).toBe(true)
+    expect(app.children.every((c) => c.kind === 'file')).toBe(true)
   })
 
   it('should handle multiple root level items', () => {
     const input = 'app1\napp2\napp3'
     const result = parseInput(input)
     expect(result.children).toHaveLength(3)
-    expect(result.children.map(c => c.name)).toEqual(['app1', 'app2', 'app3'])
+    expect(result.children.map((c) => c.name)).toEqual(['app1', 'app2', 'app3'])
   })
 
   it('should throw error for invalid string inputs via parseInput', () => {
@@ -139,7 +139,7 @@ describe('parseInput', () => {
       '    App.js',
       '    index.js',
       '  package.json',
-      '  README.md'
+      '  README.md',
     ].join('\n')
 
     const result = parseInput(input)
@@ -147,7 +147,9 @@ describe('parseInput', () => {
     expect(result.children).toHaveLength(1)
     expect(getChild(result, 'my-project').children).toHaveLength(4)
     expect(getChild(result, 'my-project', 'src', 'components', 'Button.js').kind).toBe('file')
-    expect(getChild(result, 'my-project', 'node_modules', 'lodash', 'package.json').kind).toBe('file')
+    expect(getChild(result, 'my-project', 'node_modules', 'lodash', 'package.json').kind).toBe(
+      'file',
+    )
     expect(getChild(result, 'my-project', 'README.md').kind).toBe('file')
   })
 })

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vite-plus/test'
 import {
   formatTree,
   formatNestedJson,
@@ -7,10 +7,10 @@ import {
   formatYaml,
   formatXml,
   formatDot,
-  formatMarkdown
-} from '../app/lib/tree-formatters'
-import { parseInput } from '../app/lib/parse-input'
-import type { TreeNode } from '../app/lib/FileStructure'
+  formatMarkdown,
+} from '../src/features/tree/domain/tree-formatters'
+import { parseInputOrThrow as parseInput } from '../src/features/tree/domain/parse-tree-input'
+import type { TreeNode } from '../src/features/tree/domain/tree.types'
 
 // Helper function to create a simple test structure
 function createTestStructure(): TreeNode {
@@ -130,7 +130,7 @@ describe('formatArrayJson', () => {
     expect(app.children).toHaveLength(2)
 
     // Check src directory
-    const src = app.children!.find(child => child.name === 'src')
+    const src = app.children!.find((child) => child.name === 'src')
     expect(src).toBeDefined()
     expect(src!.type).toBe('directory')
     expect(src!.children).toHaveLength(1)
@@ -262,7 +262,7 @@ describe('formatMarkdown', () => {
   it('should format a simple structure to markdown', () => {
     const structure = createTestStructure()
     const result = formatMarkdown(structure)
-    const lines = result.split('\n').filter(line => line.trim())
+    const lines = result.split('\n').filter((line) => line.trim())
 
     // Check markdown structure
     expect(lines[0]).toBe('* app/')

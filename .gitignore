@@ -1,14 +1,16 @@
-# Nuxt dev/build outputs
-.output
+# Build outputs
 .data
-.nuxt
 .nitro
+.nuxt
+.output
 .cache
 dist
+dist-ssr
 html
 
 # Node dependencies
 node_modules
+.pnpm-store
 
 # Logs
 logs
@@ -24,5 +26,5 @@ logs
 .env.*
 !.env.example
 
-# VSC
+# Editors
 .history

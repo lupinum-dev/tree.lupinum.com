@@ -1,2 +1,5 @@
-patchedDependencies:
-  '@nuxt/ui@3.0.0-beta.2': patches/@nuxt__ui@3.0.0-beta.2.patch
+allowBuilds:
+  vue-demi: true
+overrides:
+  vite: npm:@voidzero-dev/vite-plus-core@0.3.0
+  vitest: 4.1.11
