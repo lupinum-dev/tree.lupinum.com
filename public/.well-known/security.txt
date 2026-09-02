@@ -1,0 +1,5 @@
+Contact: https://github.com/lupinum-dev/tree.lupinum.com/security/advisories/new
+Expires: 2027-09-02T23:59:59.000Z
+Preferred-Languages: en, de
+Canonical: https://tree.lupinum.com/.well-known/security.txt
+Policy: https://github.com/lupinum-dev/tree.lupinum.com/security/policy

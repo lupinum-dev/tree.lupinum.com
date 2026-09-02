@@ -74,7 +74,9 @@ async function indentSelection(event: KeyboardEvent) {
     class="workspace-source flex min-h-[28rem] min-w-0 flex-col bg-background"
     aria-labelledby="source-heading"
   >
-    <div class="flex min-h-13 shrink-0 flex-wrap items-center gap-3 border-b px-4 py-2">
+    <div
+      class="workspace-panel-header flex shrink-0 flex-wrap items-center gap-3 border-b px-4 py-2"
+    >
       <div class="min-w-0">
         <Label id="source-heading" for="tree-source" class="text-sm font-semibold"
           >Tree source</Label
@@ -82,7 +84,7 @@ async function indentSelection(event: KeyboardEvent) {
         <p class="text-xs text-muted-foreground">Use two spaces for each level.</p>
       </div>
       <Button
-        class="ml-auto"
+        class="w-full justify-center sm:ml-auto sm:w-auto"
         variant="outline"
         size="sm"
         :disabled="workspace.isImporting.value"

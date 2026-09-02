@@ -17,7 +17,7 @@ const saveMessage = computed(() => {
 
 <template>
   <div
-    class="workspace-shell flex min-h-svh min-w-0 flex-1 flex-col md:min-h-0"
+    class="workspace-shell flex min-h-svh min-w-0 flex-1 flex-col md:min-h-[calc(100svh-1rem)]"
     :aria-busy="!workspace.isReady.value"
   >
     <header
@@ -26,9 +26,9 @@ const saveMessage = computed(() => {
       <SidebarTrigger class="-ml-1" />
       <div class="mx-1 h-4 w-px bg-border" aria-hidden="true" />
       <div class="min-w-0">
-        <h1 class="truncate text-sm font-semibold tracking-[-0.01em]">
-          {{ workspace.activeTree.value?.name ?? 'ASCII Tree Generator' }}
-        </h1>
+        <h2 class="truncate text-sm font-semibold tracking-[-0.01em]">
+          {{ workspace.activeTree.value?.name ?? 'Lupinum Tree' }}
+        </h2>
         <p class="sr-only">Turn an indented directory list into clean, shareable tree output.</p>
       </div>
       <div

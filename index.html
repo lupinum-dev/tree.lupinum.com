@@ -3,35 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="application-name" content="ASCII Tree Generator" />
+    <meta name="application-name" content="Lupinum Tree" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <meta
       name="description"
-      content="Free ASCII and Unicode folder-tree maker for README files, documentation, and AI prompts. Everything runs locally in your browser."
+      content="Create ASCII, Unicode, Markdown, and JSON directory trees from indented text or a local folder. Free, open source, and private."
     />
     <link rel="canonical" href="https://tree.lupinum.com/" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tree.lupinum.com/" />
-    <meta property="og:site_name" content="ASCII Tree Generator" />
-    <meta property="og:title" content="ASCII Tree Generator" />
+    <meta property="og:site_name" content="Lupinum Tree" />
+    <meta property="og:title" content="ASCII Tree Generator — Lupinum Tree" />
     <meta
       property="og:description"
-      content="Create clean folder trees for README files, documentation, chats, and AI prompts."
+      content="Create clean directory trees for README files, documentation, code comments, and technical plans."
     />
-    <meta property="og:image" content="https://tree.lupinum.com/apple-touch-icon.png" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="ASCII Tree Generator" />
+    <meta property="og:image" content="https://tree.lupinum.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Lupinum Tree ASCII tree generator" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ASCII Tree Generator — Lupinum Tree" />
     <meta
       name="twitter:description"
-      content="Create clean folder trees for README files, documentation, chats, and AI prompts."
+      content="Create clean directory trees for README files, documentation, code comments, and technical plans."
     />
-    <meta name="twitter:image" content="https://tree.lupinum.com/apple-touch-icon.png" />
-    <title>ASCII Tree Generator — folder trees for README files and docs</title>
+    <meta name="twitter:image" content="https://tree.lupinum.com/og-image.png" />
+    <title>ASCII Tree Generator — Lupinum Tree</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://tree.lupinum.com/#website",
+            "url": "https://tree.lupinum.com/",
+            "name": "Lupinum Tree"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://tree.lupinum.com/#app",
+            "url": "https://tree.lupinum.com/",
+            "name": "ASCII Tree Generator",
+            "alternateName": "Lupinum Tree",
+            "description": "Create ASCII, Unicode, Markdown, and JSON directory trees from indented text or a local folder.",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Any",
+            "browserRequirements": "Requires a modern web browser",
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Lupinum",
+              "url": "https://lupinum.com/"
+            }
+          }
+        ]
+      }
+    </script>
     <script>
       ;(() => {
         let stored = null
@@ -47,14 +86,6 @@
     </script>
   </head>
   <body>
-    <!--
-      THESIS: A directory workbench where saved trees, source, and result stay visible; it refuses the old stack of tabs, cards, and repeated controls.
-      OWN-WORLD: Neutral Geist surfaces, one quiet emerald signal, continuous work planes, compact shadcn controls, and mono only for tree data.
-      STORY: Choose or create a tree, edit its source, tune the format, and copy a correct result without leaving the workspace.
-      FIRST VIEWPORT: A 272px tree-and-settings rail beside a flexible two-pane editor; Copy output stays in the result header.
-      FORM: Desktop editing instrument with an off-canvas mobile rail; pinned Lupinum workbench direction.
-      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
-    -->
     <div id="app"><!--ssr-outlet--></div>
     <script type="module" src="/src/entry-client.ts"></script>
   </body>

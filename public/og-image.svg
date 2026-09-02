@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <circle cx="1080" cy="70" r="320" fill="#155e75" opacity=".32"/>
+  <circle cx="100" cy="600" r="280" fill="#0e7490" opacity=".16"/>
+  <g transform="translate(86 78)">
+    <rect width="76" height="76" rx="18" fill="#0891b2"/>
+    <g fill="none" stroke="#ecfeff" stroke-linecap="round" stroke-linejoin="round" stroke-width="5">
+      <rect x="14" y="13" width="22" height="14" rx="3"/>
+      <rect x="43" y="36" width="19" height="13" rx="3"/>
+      <rect x="43" y="55" width="19" height="13" rx="3"/>
+      <path d="M25 27v34h11M25 43h11"/>
+    </g>
+  </g>
+  <text x="184" y="124" fill="#a5f3fc" font-family="Arial, sans-serif" font-size="31" font-weight="600">Lupinum Tree</text>
+  <text x="86" y="252" fill="#f8fafc" font-family="Arial, sans-serif" font-size="72" font-weight="700">ASCII tree generator</text>
+  <text x="86" y="317" fill="#94a3b8" font-family="Arial, sans-serif" font-size="31">Directory trees for README files, docs, and technical plans.</text>
+  <g transform="translate(86 385)" font-family="Menlo, Consolas, monospace" font-size="23">
+    <rect width="1028" height="170" rx="20" fill="#020617" stroke="#334155"/>
+    <text x="34" y="46" fill="#e2e8f0">project/</text>
+    <text x="34" y="82" fill="#67e8f9">├── src/</text>
+    <text x="34" y="118" fill="#67e8f9">│   └── components/</text>
+    <text x="34" y="154" fill="#67e8f9">└── README.md</text>
+  </g>
+</svg>

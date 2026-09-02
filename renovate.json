@@ -1,8 +1,20 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "baseBranches": ["main"],
+  "dependencyDashboard": true,
+  "minimumReleaseAge": "1 day",
+  "rangeStrategy": "replace",
+  "schedule": ["before 6am on Monday"],
   "lockFileMaintenance": {
     "enabled": true
   },
-  "baseBranches": ["main"],
-  "postUpdateOptions": ["pnpmDedupe"]
+  "postUpdateOptions": ["pnpmDedupe"],
+  "packageRules": [
+    {
+      "description": "Keep Vue and Vite updates together",
+      "groupName": "Vue and Vite ecosystem",
+      "matchPackageNames": ["vue", "@vue/**", "vite", "vite-plus", "@vitejs/**"]
+    }
+  ]
 }

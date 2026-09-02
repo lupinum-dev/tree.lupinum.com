@@ -26,6 +26,9 @@ logs
 .env.*
 !.env.example
 
+# Vercel project link
+.vercel
+
 # Editors
 .history
 

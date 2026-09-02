@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import {
+  ArrowUpRight,
   Check,
   Copy,
-  CodeXml,
   FolderTree,
-  Info,
   LockKeyhole,
   Moon,
   MoreHorizontal,
@@ -13,6 +12,7 @@ import {
   Sun,
 } from '@lucide/vue'
 import { onMounted, ref } from 'vue'
+import GitHubIcon from '@/components/GitHubIcon.vue'
 import type { SavedTree } from '@/features/tree/domain/workspace.types'
 import { useTreeWorkspace } from '@/features/tree/use-tree-workspace'
 import { Button } from '@/components/ui/button'
@@ -127,10 +127,28 @@ function selectTree(id: string) {
           <FolderTree class="size-4" aria-hidden="true" />
         </div>
         <div class="min-w-0 leading-tight">
-          <p class="truncate text-sm font-semibold tracking-[-0.01em]">ASCII Tree Generator</p>
-          <p class="truncate text-xs text-muted-foreground">Local directory workbench</p>
+          <h1 class="truncate text-sm font-semibold tracking-[-0.01em]">Lupinum Tree</h1>
+          <p class="truncate text-xs text-muted-foreground">ASCII tree generator</p>
         </div>
       </div>
+      <nav
+        class="grid grid-cols-2 overflow-hidden rounded-md border border-sidebar-border bg-sidebar"
+        aria-label="Primary"
+      >
+        <a
+          href="/"
+          aria-current="page"
+          class="flex min-h-8 items-center justify-center bg-sidebar-primary px-2 text-xs font-medium text-sidebar-primary-foreground no-underline"
+        >
+          Workbench
+        </a>
+        <a
+          href="/guide/"
+          class="flex min-h-8 items-center justify-center px-2 text-xs font-medium text-sidebar-foreground no-underline hover:bg-sidebar-accent focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
+        >
+          Guide
+        </a>
+      </nav>
       <Button class="w-full justify-start" size="sm" @click="addTree">
         <Plus class="size-4" aria-hidden="true" />
         New tree
@@ -212,18 +230,18 @@ function selectTree(id: string) {
         </Button>
         <Button variant="ghost" size="icon-sm" as-child>
           <a
-            href="https://github.com/lupinum/tree.lupinum.com"
+            href="https://github.com/lupinum-dev/tree.lupinum.com"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="View source on GitHub"
           >
-            <CodeXml class="size-4" aria-hidden="true" />
+            <GitHubIcon class="size-4" aria-hidden="true" />
           </a>
         </Button>
         <Button variant="ghost" size="sm" class="ml-auto text-xs text-muted-foreground" as-child>
-          <a href="https://lupinum.com" target="_blank" rel="noopener noreferrer">
-            <Info class="size-3.5" aria-hidden="true" />
+          <a href="https://lupinum.com">
             Lupinum
+            <ArrowUpRight class="size-3" aria-hidden="true" />
           </a>
         </Button>
       </div>
